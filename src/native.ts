@@ -1,6 +1,5 @@
 import type { OxlintConfig } from "vite-plus/lint";
 
-/** Reviewed against the Oxlint 1.85.0 bundled with Vite+ 1.0.0. */
 export const nativeLint: OxlintConfig = {
   plugins: ["typescript", "oxc", "unicorn"],
   categories: {

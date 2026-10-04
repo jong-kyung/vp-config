@@ -1,4 +1,4 @@
-import type { Context, ESTree, Options, Variable } from "vite-plus/lint/plugins";
+import type { Context, ESTree, Options, Scope, Variable } from "vite-plus/lint/plugins";
 
 export type Ast = ESTree.Node;
 
@@ -61,16 +61,16 @@ export function memberName(node: Ast): string | undefined {
 
 export function binding(context: Context, node: Ast): Variable | undefined {
   if (node.type !== "Identifier") return undefined;
-  let scope = context.sourceCode.getScope(node);
+  let scope: Scope | null = context.sourceCode.getScope(node);
 
-  for (;;) {
+  while (scope) {
     const variable = scope.set.get(node.name);
 
     if (variable) return variable;
-
-    if (!scope.upper) return undefined;
     scope = scope.upper;
   }
+
+  return undefined;
 }
 
 export function declaration(context: Context, node: Ast): ESTree.VariableDeclarator | undefined {

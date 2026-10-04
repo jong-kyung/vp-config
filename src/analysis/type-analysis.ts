@@ -12,7 +12,7 @@ export function createTypeAnalysis(context: Context) {
   let indexed = false;
 
   function declare(node: Ast, name: string, alias: ESTree.TSTypeAliasDeclaration | null) {
-    let owner = node.parent;
+    let owner = node.type === "ClassExpression" ? node : node.parent;
 
     while (owner?.type === "ExportNamedDeclaration" || owner?.type === "ImportDeclaration")
       owner = owner.parent;
@@ -28,11 +28,18 @@ export function createTypeAnalysis(context: Context) {
     entries.set(name, alias);
   }
 
-  function lookup(name: string, from: Ast): ESTree.TSTypeAliasDeclaration | null | undefined {
+  function lookup(
+    name: string,
+    from: Ast,
+  ): ESTree.TSTypeAliasDeclaration | ESTree.TSTypeParameter | null | undefined {
     if (!indexed) {
       walk(context, context.sourceCode.ast, (node) => {
         if (node.type === "TSTypeAliasDeclaration") declare(node, node.id.name, node);
-        else if (node.type === "TSInterfaceDeclaration" || node.type === "ClassDeclaration") {
+        else if (
+          node.type === "TSInterfaceDeclaration" ||
+          node.type === "ClassDeclaration" ||
+          node.type === "ClassExpression"
+        ) {
           if (node.id) declare(node, node.id.name, null);
         } else if (
           node.type === "ImportSpecifier" ||
@@ -48,11 +55,12 @@ export function createTypeAnalysis(context: Context) {
     let node: Ast | null = from;
 
     while (node) {
-      if (
-        "typeParameters" in node &&
-        node.typeParameters?.params.some((parameter) => parameter.name.name === name)
-      )
-        return null;
+      if ("typeParameters" in node) {
+        const parameter = node.typeParameters?.params.find((item) => item.name.name === name);
+
+        if (parameter) return parameter;
+      }
+
       const entries = scopes.get(node);
 
       if (entries?.has(name)) return entries.get(name);
@@ -94,7 +102,7 @@ export function createTypeAnalysis(context: Context) {
       seen.add(node);
       const alias = lookup(node.typeName.name, node);
 
-      if (!alias) return current;
+      if (alias?.type !== "TSTypeAliasDeclaration") return current;
       const argumentsMap = new Map<string, TypeUse>();
 
       for (const [index, parameter] of (alias.typeParameters?.params ?? []).entries()) {
@@ -152,13 +160,22 @@ export function createTypeAnalysis(context: Context) {
     return false;
   }
 
-  function unsafeValue(input: TypeUse): boolean {
+  function unsafeValue(input: TypeUse, seen = new Set<Ast>()): boolean {
     const current = expand(input);
-
-    if (contains(current, ["TSUnknownKeyword", "TSAnyKeyword", "TSObjectKeyword"])) return true;
     const node = current.node;
 
-    return node.type === "TSTypeLiteral" && node.members.length === 0;
+    if (seen.has(node)) return false;
+
+    if (node.type === "TSUnionType") {
+      const next = new Set(seen).add(node);
+
+      return node.types.some((type) => unsafeValue(use(type, current.bindings), next));
+    }
+
+    return (
+      ["TSUnknownKeyword", "TSAnyKeyword", "TSObjectKeyword"].includes(node.type) ||
+      (node.type === "TSTypeLiteral" && node.members.length === 0)
+    );
   }
 
   function unsafeDictionary(input: TypeUse): boolean {
@@ -189,19 +206,26 @@ export function createTypeAnalysis(context: Context) {
     const current = expand(input);
     const node = current.node;
 
-    if (standard(current, "Record") && node.type === "TSTypeReference") {
-      const key = node.typeArguments?.params[0];
+    let key: TypeUse | undefined;
 
-      return (
-        !!key &&
-        contains(use(key, current.bindings), [
-          "TSStringKeyword",
-          "TSNumberKeyword",
-          "TSSymbolKeyword",
-          "TSAnyKeyword",
-        ])
-      );
+    if (standard(current, "Record") && node.type === "TSTypeReference") {
+      const argument = node.typeArguments?.params[0];
+
+      if (argument) key = use(argument, current.bindings);
+    } else if (node.type === "TSMappedType") {
+      const constraint = use(node.constraint, current.bindings);
+      key = node.nameType
+        ? use(node.nameType, new Map(current.bindings).set(node.key.name, constraint))
+        : constraint;
     }
+
+    if (key)
+      return contains(key, [
+        "TSStringKeyword",
+        "TSNumberKeyword",
+        "TSSymbolKeyword",
+        "TSAnyKeyword",
+      ]);
 
     return (
       node.type === "TSTypeLiteral" &&
@@ -247,6 +271,29 @@ export function createTypeAnalysis(context: Context) {
     return undefined;
   }
 
+  function knownType(input: TypeUse, seen = new Set<Ast>()): boolean {
+    const current = expand(input);
+    const node = current.node;
+
+    if (
+      seen.has(node) ||
+      ["TSUnknownKeyword", "TSAnyKeyword", "TSObjectKeyword"].includes(node.type)
+    )
+      return false;
+
+    if (node.type === "TSUnionType") {
+      const next = new Set(seen).add(node);
+
+      return node.types.every((type) => knownType(use(type, current.bindings), next));
+    }
+
+    return (
+      node.type !== "TSTypeReference" ||
+      node.typeName.type !== "Identifier" ||
+      lookup(node.typeName.name, node)?.type !== "TSTypeParameter"
+    );
+  }
+
   function known(input: Ast, seen = new Set<Variable>()): boolean {
     if (input.type === "ParenthesizedExpression") return known(input.expression, seen);
 
@@ -279,32 +326,7 @@ export function createTypeAnalysis(context: Context) {
       for (const identifier of variable.identifiers) {
         const type = annotation(identifier);
 
-        if (type) {
-          if (contains(use(type), ["TSUnknownKeyword", "TSAnyKeyword", "TSObjectKeyword"]))
-            return false;
-          const resolved = expand(use(type)).node;
-
-          if (
-            resolved.type === "TSTypeReference" &&
-            resolved.typeName.type === "Identifier" &&
-            lookup(resolved.typeName.name, resolved) === null
-          ) {
-            /** Imported and interface contracts are known; a bare generic parameter is not. */
-            const name = resolved.typeName.name;
-            let parent: Ast | null = resolved.parent;
-
-            while (parent) {
-              if (
-                "typeParameters" in parent &&
-                parent.typeParameters?.params.some((parameter) => parameter.name.name === name)
-              )
-                return false;
-              parent = parent.parent;
-            }
-          }
-
-          return true;
-        }
+        if (type) return knownType(use(type));
       }
 
       const decl = declaration(context, node);
@@ -318,14 +340,18 @@ export function createTypeAnalysis(context: Context) {
       const fn = functionValue(node.callee);
       const type = fn?.returnType?.typeAnnotation;
 
-      return (
-        !!type && !contains(use(type), ["TSUnknownKeyword", "TSAnyKeyword", "TSObjectKeyword"])
-      );
+      return !!type && knownType(use(type));
     }
 
     if (node.type === "UnaryExpression") return node.operator !== "void";
 
-    if (node.type === "BinaryExpression") return known(node.left, seen) && known(node.right, seen);
+    if (node.type === "BinaryExpression")
+      return (
+        ["===", "!==", "==", "!=", "<", "<=", ">", ">=", "in", "instanceof"].includes(
+          node.operator,
+        ) ||
+        (known(node.left, seen) && known(node.right, seen))
+      );
 
     return false;
   }

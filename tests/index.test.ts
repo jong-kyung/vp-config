@@ -7,8 +7,12 @@ const severity = (setting: NonNullable<typeof lint.rules>[string]) =>
   Array.isArray(setting) ? setting[0] : setting;
 
 test("exports plain configuration objects and the exact approved inventory", () => {
-  expect(manifest.peerDependencies).toEqual({ "vite-plus": "1.0.0" });
-  expect(manifest.devDependencies["vite-plus"]).toBe("1.0.0");
+  expect(manifest.peerDependencies).toEqual({ "vite-plus": "catalog:" });
+  expect(manifest.devDependencies).toEqual({
+    "@types/node": "catalog:",
+    typescript: "catalog:",
+    "vite-plus": "catalog:",
+  });
   expect("dependencies" in manifest).toBe(false);
   expect(Object.getPrototypeOf(lint)).toBe(Object.prototype);
   expect(fmt).toEqual({});

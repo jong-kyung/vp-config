@@ -100,6 +100,14 @@ test("loads the actual tarball and freezes the effective native rule inventory",
   expect(output.trim()).toBe("fmt,lint,staged");
   expect(existsSync(join(consumer, ".vite-hooks"))).toBe(false);
   const installed = join(consumer, "node_modules/@jong-kyung/vp-config");
+  expect(JSON.parse(readFileSync(join(installed, "package.json"), "utf8"))).toMatchObject({
+    peerDependencies: { "vite-plus": "1.0.0" },
+    devDependencies: {
+      "@types/node": "^26.1.1",
+      typescript: "^7.0.2",
+      "vite-plus": "1.0.0",
+    },
+  });
   expect(readdirSync(join(installed, "dist")).sort()).toEqual([
     "index.d.mts",
     "index.mjs",

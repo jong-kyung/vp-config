@@ -162,6 +162,18 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@types/node':
+      specifier: ^26.1.1
+      version: 26.6.4
+    typescript:
+      specifier: ^7.0.2
+      version: 7.0.2
+    vite-plus:
+      specifier: 1.0.0
+      version: 1.0.0
+
 overrides:
   vite@*: npm:@voidzero-dev/vite-plus-core@1.0.0
 
@@ -170,13 +182,13 @@ importers:
   .:
     devDependencies:
       '@types/node':
-        specifier: ^26.1.1
+        specifier: 'catalog:'
         version: 26.6.4
       typescript:
-        specifier: ^7.0.2
+        specifier: 'catalog:'
         version: 7.0.2
       vite-plus:
-        specifier: 1.0.0
+        specifier: 'catalog:'
         version: 1.0.0(@types/node@26.6.4)(@vitest/ui@5.0.1)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1)
 
 packages:

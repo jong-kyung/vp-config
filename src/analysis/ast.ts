@@ -4,6 +4,14 @@ export type Ast = ESTree.Node;
 
 export type FunctionNode = ESTree.Function | ESTree.ArrowFunctionExpression;
 
+type Signature =
+  | FunctionNode
+  | ESTree.TSFunctionType
+  | ESTree.TSConstructorType
+  | ESTree.TSCallSignatureDeclaration
+  | ESTree.TSConstructSignatureDeclaration
+  | ESTree.TSMethodSignature;
+
 export function unwrap(node: Ast): Ast {
   while (
     node.type === "ParenthesizedExpression" ||
@@ -163,6 +171,10 @@ export function isFunction(node: Ast): node is FunctionNode {
     node.type === "TSDeclareFunction" ||
     node.type === "TSEmptyBodyFunctionExpression"
   );
+}
+
+export function isSignature(node: Ast): node is Signature {
+  return "params" in node && "returnType" in node;
 }
 
 export function enclosingFunction(node: Ast): FunctionNode | undefined {

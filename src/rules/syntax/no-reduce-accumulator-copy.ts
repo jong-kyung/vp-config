@@ -4,6 +4,7 @@ import {
   binding,
   enclosingFunction,
   isArray,
+  isTransparentWrapper,
   memberName,
   referencePath,
   resolveValue,
@@ -17,7 +18,7 @@ function checkReducerCopy(context: Context, node: ESTree.CallExpression): void {
   if (!fn) return;
   let parent: Ast = fn;
 
-  while (parent.parent?.type === "ParenthesizedExpression") parent = parent.parent;
+  while (parent.parent && isTransparentWrapper(parent.parent)) parent = parent.parent;
   const call = parent.parent;
 
   if (

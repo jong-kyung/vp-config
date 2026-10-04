@@ -37,6 +37,7 @@ for (const [name, cases] of Object.entries({
       { code: "Reflect.apply(fn, ctx, []);", errors: 1 },
       { code: "const invoke = Reflect.apply; invoke(fn, ctx, []);", errors: 1 },
       { code: "const { apply: invoke } = Reflect; invoke(fn, ctx, []);", errors: 1 },
+      { code: "const { apply: invoke = fallback } = Reflect; invoke(fn, ctx, []);", errors: 1 },
     ],
   },
   "no-reflect-get": {
@@ -46,6 +47,10 @@ for (const [name, cases] of Object.entries({
       "var api = Reflect; var api = customApi; api.get(value, key);",
       "var api = customApi; var api = Reflect; api.get(value, key);",
       "var { get } = Reflect; var { get } = customApi; get(value, key);",
+      "let { get: read = fallback } = Reflect; read = customApi.get; read(value, key);",
+      "var { get: read = fallback } = Reflect; var { get: read = fallback } = customApi; read(value, key);",
+      "function run(Reflect) { const { get: read = fallback } = Reflect; read(value, key); }",
+      "const { get: read = Reflect.get } = customApi; read(value, key);",
     ],
     invalid: [
       { code: "Reflect.get(object, key);", errors: 1 },
@@ -53,6 +58,9 @@ for (const [name, cases] of Object.entries({
       { code: "const reflect = Reflect; reflect.get(object, key);", errors: 1 },
       { code: "var api; var api = Reflect; api.get(value, key);", errors: 1 },
       { code: "var api = Reflect; var api; api.get(value, key);", errors: 1 },
+      { code: "const { get: read = fallback } = Reflect; read(value, key);", errors: 1 },
+      { code: "const { get = fallback } = Reflect; get(value, key);", errors: 1 },
+      { code: "const { ['get']: read = fallback } = Reflect; read(value, key);", errors: 1 },
     ],
   },
   "no-module-mocking": {
@@ -70,6 +78,11 @@ for (const [name, cases] of Object.entries({
       { code: "import { vi as v } from 'vitest'; v.doMock('./service');", errors: 1 },
       { code: "const { mock: replace } = vi; replace('./service');", errors: 1 },
       { code: "import * as tests from 'vitest'; tests.vi.mock('./service');", errors: 1 },
+      {
+        code: "import { vi } from 'vitest'; const { mock = fallback } = vi; mock('x');",
+        errors: 1,
+      },
+      { code: "const { mock: replace = fallback } = jest; replace('x');", errors: 1 },
     ],
   },
   "no-runtime-typeof": {
@@ -157,6 +170,9 @@ for (const [name, cases] of Object.entries({
       "items.reduce((acc, item) => acc.concat(item), '');",
       "function run(Array) { return items.reduce((acc, item) => acc.concat(item), Array()); }",
       "items.reduce((acc, item) => { var copy = acc; var copy = []; return copy.slice(); }, []);",
+      "items.reduce(wrap((acc, item) => acc.concat(item)), []);",
+      "items.reduce((acc, item) => { function inner(acc) { return acc.concat(item); } return acc; }, []);",
+      "items.reduce(((acc, item) => acc.concat(item)) as Reducer, '');",
     ],
     invalid: [
       { code: "items.reduce((acc, item) => acc.concat(item), []);", errors: 1 },
@@ -164,6 +180,11 @@ for (const [name, cases] of Object.entries({
       { code: "const A = Array; items.reduce((acc, item) => acc.slice(), A());", errors: 1 },
       { code: "items.reduce((acc, item) => Object.assign({}, acc, item), {});", errors: 1 },
       { code: "items.reduce((acc, item) => Array.from(acc), []);", errors: 1 },
+      { code: "items.reduce(((acc, item) => acc.concat(item)) as Reducer, []);", errors: 1 },
+      { code: "items.reduce(((acc, item) => acc.concat(item)) satisfies Reducer, []);", errors: 1 },
+      { code: "items.reduce(((acc, item) => acc.concat(item))!, []);", errors: 1 },
+      { code: "items.reduce(<Reducer>((acc, item) => acc.concat(item)), []);", errors: 1 },
+      { code: "items.reduce((((acc, item) => acc.concat(item)) as Reducer)!, []);", errors: 1 },
       {
         code: "items.reduce((acc, item) => { const alias = acc; return alias.slice(); }, []);",
         errors: 1,

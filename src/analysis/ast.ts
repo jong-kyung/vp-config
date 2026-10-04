@@ -12,17 +12,19 @@ export type Signature =
   | ESTree.TSConstructSignatureDeclaration
   | ESTree.TSMethodSignature;
 
-export function unwrap(node: Ast): Ast {
-  while (
+export function isTransparentWrapper(node: Ast): node is Ast & { expression: Ast } {
+  return (
     node.type === "ParenthesizedExpression" ||
     node.type === "ChainExpression" ||
     node.type === "TSAsExpression" ||
     node.type === "TSTypeAssertion" ||
     node.type === "TSSatisfiesExpression" ||
     node.type === "TSNonNullExpression"
-  ) {
-    node = node.expression;
-  }
+  );
+}
+
+export function unwrap(node: Ast): Ast {
+  while (isTransparentWrapper(node)) node = node.expression;
 
   return node;
 }
@@ -73,14 +75,15 @@ export function binding(context: Context, node: Ast): Variable | undefined {
   return undefined;
 }
 
+/** Destructuring defaults can produce multiple initializer references to the same identifier. */
 function hasReassignment(variable: Variable): boolean {
-  let initialized = false;
+  let initializer: Ast | undefined;
 
   for (const reference of variable.references) {
     if (!reference.isWrite()) continue;
 
-    if (!reference.init || initialized) return true;
-    initialized = true;
+    if (!reference.init || (initializer && initializer !== reference.identifier)) return true;
+    initializer = reference.identifier;
   }
 
   return false;
@@ -160,12 +163,12 @@ export function referencePath(
 
   if (decl.id.type === "ObjectPattern") {
     for (const property of decl.id.properties) {
-      if (
-        property.type !== "Property" ||
-        property.value.type !== "Identifier" ||
-        property.value.name !== node.name
-      )
-        continue;
+      if (property.type !== "Property") continue;
+
+      const target =
+        property.value.type === "AssignmentPattern" ? property.value.left : property.value;
+
+      if (target.type !== "Identifier" || target.name !== node.name) continue;
 
       if (property.computed && property.key.type !== "Literal") continue;
       const object = referencePath(context, decl.init, seen);

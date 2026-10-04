@@ -1,13 +1,11 @@
 import { describe, it } from "vite-plus/test";
 import { RuleTester } from "vite-plus/lint/plugins-dev";
-import { typeRules } from "../src/rules/types.ts";
+import plugin from "../src/plugin.ts";
 
 RuleTester.describe = describe;
 RuleTester.it = it;
 
 const tester = new RuleTester({ languageOptions: { parserOptions: { lang: "ts" } } });
-
-const rules = new Map(Object.entries(typeRules));
 
 for (const [name, cases] of Object.entries({
   "no-object-parameters": {
@@ -156,5 +154,5 @@ for (const [name, cases] of Object.entries({
     ],
   },
 } satisfies Record<string, RuleTester.TestCases>)) {
-  tester.run(name, rules.get(name)!, cases);
+  tester.run(name, plugin.rules[name]!, cases);
 }

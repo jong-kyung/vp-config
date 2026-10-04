@@ -28,7 +28,11 @@ for (const [name, cases] of Object.entries({
     ],
   },
   "no-reflect-apply": {
-    valid: ["fn.call(receiver, value);", "function run(Reflect) { Reflect.apply(fn, ctx, []); }"],
+    valid: [
+      "fn.call(receiver, value);",
+      "function run(Reflect) { Reflect.apply(fn, ctx, []); }",
+      "var api = Reflect; var api = customApi; api.apply(fn, ctx, []);",
+    ],
     invalid: [
       { code: "Reflect.apply(fn, ctx, []);", errors: 1 },
       { code: "const invoke = Reflect.apply; invoke(fn, ctx, []);", errors: 1 },
@@ -36,15 +40,28 @@ for (const [name, cases] of Object.entries({
     ],
   },
   "no-reflect-get": {
-    valid: ["const x = object.value;", "const Reflect = custom; Reflect.get(x, key);"],
+    valid: [
+      "const x = object.value;",
+      "const Reflect = custom; Reflect.get(x, key);",
+      "var api = Reflect; var api = customApi; api.get(value, key);",
+      "var api = customApi; var api = Reflect; api.get(value, key);",
+      "var { get } = Reflect; var { get } = customApi; get(value, key);",
+    ],
     invalid: [
       { code: "Reflect.get(object, key);", errors: 1 },
       { code: "globalThis.Reflect['get'](object, key);", errors: 1 },
       { code: "const reflect = Reflect; reflect.get(object, key);", errors: 1 },
+      { code: "var api; var api = Reflect; api.get(value, key);", errors: 1 },
+      { code: "var api = Reflect; var api; api.get(value, key);", errors: 1 },
     ],
   },
   "no-module-mocking": {
-    valid: ["vi.fn();", "vi.spyOn(target, 'run');", "function test(vi) { vi.mock('x'); }"],
+    valid: [
+      "vi.fn();",
+      "vi.spyOn(target, 'run');",
+      "function test(vi) { vi.mock('x'); }",
+      "var api = vi; var api = service; api.mock('x');",
+    ],
     invalid: [
       { code: "vi.mock('./service');", errors: 1 },
       { code: "import { vi } from 'vite-plus/test'; vi.mock('./service');", errors: 1 },
@@ -105,11 +122,21 @@ for (const [name, cases] of Object.entries({
       "const values = unknownFactory().filter(test).map(convert);",
       "type Array<T> = IteratorObject<T>; function run(values: Array<number>) { return values.filter(test).map(convert); }",
       "function run(Array) { return Array.from(values).filter(test).map(convert); }",
+      "function run(Array) { return Array(1, 2).filter(test).map(convert); }",
+      "const Array = custom; Array(1, 2).filter(test).map(convert);",
+      "var values = []; var values = iterator; values.filter(test).map(convert);",
+      "var values = iterator; var values = []; values.filter(test).map(convert);",
+      "var values: number[] = []; var values = iterator; values.filter(test).map(convert);",
+      "var A = Array; var A = custom; A().filter(test).map(convert);",
       "const values = list.filter(test);",
       "let values = []; values = iterator; values.filter(test).map(convert);",
     ],
     invalid: [
       { code: "const values = [1, 2].filter(test).map(convert);", errors: 1 },
+      { code: "Array(1, 2).filter(test).map(convert);", errors: 1 },
+      { code: "globalThis.Array(1, 2).filter(test).map(convert);", errors: 1 },
+      { code: "const A = Array; A(1, 2).filter(test).map(convert);", errors: 1 },
+      { code: "var values; var values = []; values.filter(test).map(convert);", errors: 1 },
       {
         code: "function run(values: number[]) { return values.map(convert).filter(test); }",
         errors: 1,
@@ -128,9 +155,13 @@ for (const [name, cases] of Object.entries({
       "items.reduce((acc, item) => Object.assign(acc, item), {});",
       "items.reduce((acc, item) => item.slice(), []);",
       "items.reduce((acc, item) => acc.concat(item), '');",
+      "function run(Array) { return items.reduce((acc, item) => acc.concat(item), Array()); }",
+      "items.reduce((acc, item) => { var copy = acc; var copy = []; return copy.slice(); }, []);",
     ],
     invalid: [
       { code: "items.reduce((acc, item) => acc.concat(item), []);", errors: 1 },
+      { code: "items.reduce((acc, item) => acc.concat(item), Array());", errors: 1 },
+      { code: "const A = Array; items.reduce((acc, item) => acc.slice(), A());", errors: 1 },
       { code: "items.reduce((acc, item) => Object.assign({}, acc, item), {});", errors: 1 },
       { code: "items.reduce((acc, item) => Array.from(acc), []);", errors: 1 },
       {

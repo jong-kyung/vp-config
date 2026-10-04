@@ -73,12 +73,27 @@ export function binding(context: Context, node: Ast): Variable | undefined {
   return undefined;
 }
 
+function hasReassignment(variable: Variable): boolean {
+  let initialized = false;
+
+  for (const reference of variable.references) {
+    if (!reference.isWrite()) continue;
+
+    if (!reference.init || initialized) return true;
+    initialized = true;
+  }
+
+  return false;
+}
+
 export function declaration(context: Context, node: Ast): ESTree.VariableDeclarator | undefined {
   const variable = binding(context, node);
 
-  if (!variable || variable.references.some((reference) => reference.isWrite() && !reference.init))
-    return undefined;
-  const definition = variable.defs.find((item) => item.node.type === "VariableDeclarator");
+  if (!variable || hasReassignment(variable)) return undefined;
+
+  const definition = variable.defs.find(
+    (item) => item.node.type === "VariableDeclarator" && item.node.init,
+  );
 
   if (definition?.node.type === "VariableDeclarator") return definition.node;
 
@@ -195,8 +210,7 @@ export function isArray(context: Context, input: Ast, seen = new Set<Variable>()
     if (!variable || seen.has(variable)) return false;
     seen.add(variable);
 
-    if (variable.references.some((reference) => reference.isWrite() && !reference.init))
-      return false;
+    if (hasReassignment(variable)) return false;
 
     const identifier = variable.identifiers.find(
       (id) => id.type === "Identifier" && id.typeAnnotation,
@@ -232,7 +246,8 @@ export function isArray(context: Context, input: Ast, seen = new Set<Variable>()
 
   if (node.type !== "CallExpression") return false;
 
-  if (["Array.from", "Array.of"].includes(referencePath(context, node.callee) ?? "")) return true;
+  if (["Array", "Array.from", "Array.of"].includes(referencePath(context, node.callee) ?? ""))
+    return true;
   const callee = unwrap(node.callee);
 
   return (

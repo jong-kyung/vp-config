@@ -4,7 +4,10 @@ import { syntaxRules } from "../src/rules/syntax.ts";
 
 RuleTester.describe = describe;
 RuleTester.it = it;
+
 const tester = new RuleTester({ languageOptions: { parserOptions: { lang: "ts" } } });
+
+const rules = new Map(Object.entries(syntaxRules));
 
 for (const [name, cases] of Object.entries({
   "no-chained-type-assertions": {
@@ -46,6 +49,8 @@ for (const [name, cases] of Object.entries({
     valid: ["vi.fn();", "vi.spyOn(target, 'run');", "function test(vi) { vi.mock('x'); }"],
     invalid: [
       { code: "vi.mock('./service');", errors: 1 },
+      { code: "import { vi } from 'vite-plus/test'; vi.mock('./service');", errors: 1 },
+      { code: "import { vitest as v } from 'vitest'; v.mock('./service');", errors: 1 },
       { code: "jest.unstable_mockModule('./service', factory);", errors: 1 },
       { code: "import { vi as v } from 'vitest'; v.doMock('./service');", errors: 1 },
       { code: "const { mock: replace } = vi; replace('./service');", errors: 1 },
@@ -100,6 +105,8 @@ for (const [name, cases] of Object.entries({
     valid: [
       "const values = list.values().filter(test).map(convert);",
       "const values = unknownFactory().filter(test).map(convert);",
+      "type Array<T> = IteratorObject<T>; function run(values: Array<number>) { return values.filter(test).map(convert); }",
+      "function run(Array) { return Array.from(values).filter(test).map(convert); }",
       "const values = list.filter(test);",
       "let values = []; values = iterator; values.filter(test).map(convert);",
     ],
@@ -107,6 +114,10 @@ for (const [name, cases] of Object.entries({
       { code: "const values = [1, 2].filter(test).map(convert);", errors: 1 },
       {
         code: "function run(values: number[]) { return values.map(convert).filter(test); }",
+        errors: 1,
+      },
+      {
+        code: "function run(values: readonly number[]) { return values.filter(test).map(convert); }",
         errors: 1,
       },
       { code: "const a = [1]; const b = a; b.filter(test).map(convert);", errors: 1 },
@@ -131,5 +142,5 @@ for (const [name, cases] of Object.entries({
     ],
   },
 } satisfies Record<string, RuleTester.TestCases>)) {
-  tester.run(name, syntaxRules[name]!, cases);
+  tester.run(name, rules.get(name)!, cases);
 }

@@ -1,6 +1,6 @@
 import { defineRule } from "vite-plus/lint/plugins";
 import type { Context, ESTree, Rule } from "vite-plus/lint/plugins";
-import { binding, enclosingFunction, unwrap, walk } from "./ast.ts";
+import { binding, enclosingFunction, isConstType, unwrap, walk } from "./ast.ts";
 import type { Ast, FunctionNode } from "./ast.ts";
 import { createTypeAnalysis } from "./type-analysis.ts";
 
@@ -18,13 +18,16 @@ function isSignature(node: Ast): node is Signature {
 
 function parameterBinding(node: ESTree.ParamPattern): Ast {
   if (node.type === "TSParameterProperty") return parameterBinding(node.parameter);
+
   if (node.type === "AssignmentPattern") return node.left;
+
   return node;
 }
 
 function inConstraint(node: Ast): boolean {
   const range = node.range;
   let parent = node.parent;
+
   while (parent) {
     if (
       parent.type === "TSTypeParameter" &&
@@ -35,6 +38,7 @@ function inConstraint(node: Ast): boolean {
       return true;
     parent = parent.parent;
   }
+
   return false;
 }
 
@@ -55,13 +59,17 @@ function parameterRule(kind: "TSUnknownKeyword" | "TSObjectKeyword"): Rule {
           const types = createTypeAnalysis(context);
           walk(context, program, (node) => {
             if (!isSignature(node)) return;
+
             for (const parameter of node.params) {
               const target = parameterBinding(parameter);
               const type = types.annotation(parameter);
+
               if (!type || !types.contains(types.use(type), [kind])) continue;
+
               if (kind === "TSUnknownKeyword" && target.type === "Identifier") {
                 if (target.name === "cause") continue;
                 const predicate = node.returnType?.typeAnnotation;
+
                 if (
                   predicate?.type === "TSTypePredicate" &&
                   predicate.parameterName.type === "Identifier" &&
@@ -69,6 +77,7 @@ function parameterRule(kind: "TSUnknownKeyword" | "TSObjectKeyword"): Rule {
                 )
                   continue;
               }
+
               context.report({ node: type, messageId: "avoid" });
             }
           });
@@ -78,19 +87,12 @@ function parameterRule(kind: "TSUnknownKeyword" | "TSObjectKeyword"): Rule {
   });
 }
 
-function isConstType(type: ESTree.TSType): boolean {
-  return (
-    type.type === "TSTypeReference" &&
-    type.typeName.type === "Identifier" &&
-    type.typeName.name === "const"
-  );
-}
-
 function checkWidening(context: Context, program: ESTree.Program): void {
   const types = createTypeAnalysis(context);
   function check(type: ESTree.TSType | undefined, value: Ast | null | undefined, report: Ast) {
     if (!type || !value || !types.wide(type) || !types.known(value)) return;
     const expression = unwrap(value);
+
     if (
       types.openDictionary(types.use(type)) &&
       expression.type === "ObjectExpression" &&
@@ -99,6 +101,7 @@ function checkWidening(context: Context, program: ESTree.Program): void {
       return;
     context.report({ node: report, messageId: "avoid" });
   }
+
   walk(context, program, (node) => {
     if (node.type === "VariableDeclarator") check(types.annotation(node.id), node.init, node);
     else if (node.type === "AssignmentExpression" && node.operator === "=") {
@@ -111,9 +114,12 @@ function checkWidening(context: Context, program: ESTree.Program): void {
       check(node.returnType?.typeAnnotation, node.body, node.body);
     } else if (node.type === "CallExpression") {
       const fn = types.functionValue(node.callee);
+
       if (!fn) return;
+
       for (const [index, argument] of node.arguments.entries()) {
         const parameter = fn.params[index];
+
         if (parameter && argument.type !== "SpreadElement")
           check(types.annotation(parameter), argument, argument);
       }
@@ -123,7 +129,7 @@ function checkWidening(context: Context, program: ESTree.Program): void {
   });
 }
 
-export const typeRules: Record<string, Rule> = {
+export const typeRules = {
   "no-object-parameters": parameterRule("TSObjectKeyword"),
   "no-unknown-parameters": parameterRule("TSUnknownKeyword"),
   "no-unknown-returns": defineRule({
@@ -140,6 +146,7 @@ export const typeRules: Record<string, Rule> = {
           walk(context, program, (node) => {
             if (!isSignature(node)) return;
             const type = node.returnType?.typeAnnotation;
+
             if (type && types.contains(types.use(type), ["TSUnknownKeyword"], true))
               context.report({ node: type, messageId: "avoid" });
           });
@@ -177,6 +184,7 @@ export const typeRules: Record<string, Rule> = {
           const types = createTypeAnalysis(context);
           walk(context, program, (node) => {
             if (inConstraint(node)) return;
+
             if (node.type === "TSIndexSignature") {
               if (types.unsafeValue(types.use(node.typeAnnotation.typeAnnotation)))
                 context.report({ node, messageId: "avoid" });
@@ -206,10 +214,13 @@ export const typeRules: Record<string, Rule> = {
           walk(context, program, (node) => {
             if (node.type !== "TSTypeAliasDeclaration" || node.typeParameters?.params.length)
               return;
+
             const parent =
               node.parent.type === "ExportNamedDeclaration" ? node.parent.parent : node.parent;
+
             if (parent.type !== "Program") return;
             const type = types.expand(types.use(node.typeAnnotation)).node;
+
             if (
               [
                 "TSStringKeyword",
@@ -262,4 +273,4 @@ export const typeRules: Record<string, Rule> = {
       };
     },
   }),
-};
+} satisfies Record<string, Rule>;

@@ -4,7 +4,10 @@ import { typeRules } from "../src/rules/types.ts";
 
 RuleTester.describe = describe;
 RuleTester.it = it;
+
 const tester = new RuleTester({ languageOptions: { parserOptions: { lang: "ts" } } });
+
+const rules = new Map(Object.entries(typeRules));
 
 for (const [name, cases] of Object.entries({
   "no-object-parameters": {
@@ -153,5 +156,5 @@ for (const [name, cases] of Object.entries({
     ],
   },
 } satisfies Record<string, RuleTester.TestCases>)) {
-  tester.run(name, typeRules[name]!, cases);
+  tester.run(name, rules.get(name)!, cases);
 }

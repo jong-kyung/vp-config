@@ -4,7 +4,10 @@ import { presentationRules } from "../src/rules/presentation.ts";
 
 RuleTester.describe = describe;
 RuleTester.it = it;
+
 const tester = new RuleTester({ languageOptions: { parserOptions: { lang: "ts" } } });
+
+const rules = new Map(Object.entries(presentationRules));
 
 for (const [name, cases] of Object.entries({
   "no-em-dash": {
@@ -126,5 +129,5 @@ for (const [name, cases] of Object.entries({
     ],
   },
 } satisfies Record<string, RuleTester.TestCases>)) {
-  tester.run(name, presentationRules[name]!, cases);
+  tester.run(name, rules.get(name)!, cases);
 }

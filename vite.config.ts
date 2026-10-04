@@ -1,22 +1,20 @@
 import { defineConfig } from "vite-plus";
-import { nativeLint } from "./src/native.ts";
+import { lint, fmt, staged } from "./src/index.ts";
 
 export default defineConfig({
-  staged: {
-    "*": "vp check --fix",
-  },
+  staged,
   pack: {
-    deps: {
-      // tsdown <0.23 compatibility: resolve external dependency subpaths.
-      // Remove to preserve subpath imports as written (the new default).
-      // https://tsdown.dev/options/dependencies#deps-resolvedepsubpath
-      resolveDepSubpath: true,
-    },
+    entry: ["src/index.ts", "src/plugin.ts"],
+    target: "node22.18",
     dts: {
       generator: "tsgo",
     },
-    exports: true,
+    exports: false,
   },
-  lint: nativeLint,
-  fmt: {},
+  lint: {
+    ...lint,
+    // Load source while developing, without requiring an earlier package build.
+    jsPlugins: [{ name: "jong-kyung", specifier: "./src/plugin.ts" }],
+  },
+  fmt,
 });

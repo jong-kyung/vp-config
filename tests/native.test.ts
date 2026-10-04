@@ -20,12 +20,14 @@ test("native severities match every approved default decision", () => {
   const rows = [...decisions.matchAll(/^\|\s*\d+\s*\|\s*(\S+)\s*\|\s*(error|warn|off)\b/gm)];
   expect(rows).toHaveLength(111);
   const names: string[] = [];
+
   for (const [, id, expected] of rows) {
     const name = id!.replace(/^eslint\//, "");
     names.push(name);
     const setting = nativeLint.rules![name];
     expect(Array.isArray(setting) ? setting[0] : setting, name).toBe(expected);
   }
+
   expect(Object.keys(nativeLint.rules!).sort()).toEqual([...names, ...optionalRules].sort());
 });
 
@@ -33,6 +35,7 @@ test("only approved rules are active and warnings stay nonblocking", () => {
   const levels = Object.values(nativeLint.rules!).map((value) =>
     Array.isArray(value) ? value[0] : value,
   );
+
   expect(levels.filter((level) => level === "error")).toHaveLength(82);
   expect(levels.filter((level) => level === "warn")).toHaveLength(11);
   expect(levels.filter((level) => level === "off")).toHaveLength(28);

@@ -4,6 +4,8 @@ import {
   binding,
   enclosingFunction,
   isArray,
+  isConstType,
+  isOptionsObject,
   memberName,
   referencePath,
   resolveValue,
@@ -11,16 +13,9 @@ import {
 } from "./ast.ts";
 import type { Ast } from "./ast.ts";
 
-function isConstAssertion(node: ESTree.TSAsExpression | ESTree.TSTypeAssertion): boolean {
-  return (
-    node.typeAnnotation.type === "TSTypeReference" &&
-    node.typeAnnotation.typeName.type === "Identifier" &&
-    node.typeAnnotation.typeName.name === "const"
-  );
-}
-
 function assertionChain(node: Ast): (ESTree.TSAsExpression | ESTree.TSTypeAssertion)[] {
   const assertions: (ESTree.TSAsExpression | ESTree.TSTypeAssertion)[] = [];
+
   for (;;) {
     if (node.type === "ParenthesizedExpression") node = node.expression;
     else if (node.type === "TSAsExpression" || node.type === "TSTypeAssertion") {
@@ -32,6 +27,7 @@ function assertionChain(node: Ast): (ESTree.TSAsExpression | ESTree.TSTypeAssert
 
 function isEmptyObject(node: Ast): boolean {
   const value = unwrap(node);
+
   return value.type === "ObjectExpression" && value.properties.length === 0;
 }
 
@@ -59,6 +55,7 @@ function checkStaticClass(context: Context, node: ESTree.Class): void {
   )
     return;
   let count = 0;
+
   for (const member of node.body.body) {
     if (
       member.type === "StaticBlock" ||
@@ -66,6 +63,7 @@ function checkStaticClass(context: Context, node: ESTree.Class): void {
       member.decorators.length
     )
       return;
+
     if (
       member.type === "MethodDefinition" &&
       member.kind === "constructor" &&
@@ -73,18 +71,23 @@ function checkStaticClass(context: Context, node: ESTree.Class): void {
       !member.value.body?.body.length
     )
       continue;
+
     if (!member.static) return;
     count++;
   }
+
   if (count > 0) context.report({ node, messageId: "avoid" });
 }
 
 function checkReducerCopy(context: Context, node: ESTree.CallExpression): void {
   const fn = enclosingFunction(node);
+
   if (!fn) return;
   let parent: Ast = fn;
+
   while (parent.parent?.type === "ParenthesizedExpression") parent = parent.parent;
   const call = parent.parent;
+
   if (
     call?.type !== "CallExpression" ||
     call.arguments[0] !== parent ||
@@ -92,15 +95,20 @@ function checkReducerCopy(context: Context, node: ESTree.CallExpression): void {
   )
     return;
   const accumulator = fn.params[0];
+
   if (accumulator?.type !== "Identifier") return;
   const variable = binding(context, accumulator);
+
   if (!variable) return;
+
   const isAccumulator = (value: Ast): boolean =>
     binding(context, resolveValue(context, value)) === variable;
+
   const path = referencePath(context, node.callee);
   const initial = call.arguments[1];
   const arrayAccumulator = (initial && isArray(context, initial)) || isArray(context, accumulator);
   let copies = false;
+
   if (path === "Object.assign" && node.arguments[0]?.type === "ObjectExpression") {
     copies = node.arguments.slice(1).some(isAccumulator);
   } else if (arrayAccumulator && path === "Array.from" && node.arguments[0]) {
@@ -115,10 +123,11 @@ function checkReducerCopy(context: Context, node: ESTree.CallExpression): void {
       ) &&
       isAccumulator(callee.object);
   }
+
   if (copies) context.report({ node, messageId: "avoid" });
 }
 
-export const syntaxRules: Record<string, Rule> = {
+export const syntaxRules = {
   "no-chained-type-assertions": defineRule({
     meta: {
       schema: [],
@@ -127,12 +136,16 @@ export const syntaxRules: Record<string, Rule> = {
     create(context) {
       function check(node: ESTree.TSAsExpression | ESTree.TSTypeAssertion) {
         let parent = node.parent;
+
         while (parent.type === "ParenthesizedExpression") parent = parent.parent;
+
         if (parent.type === "TSAsExpression" || parent.type === "TSTypeAssertion") return;
         const chain = assertionChain(node);
-        if (chain.length > 1 && chain.some((item) => !isConstAssertion(item)))
+
+        if (chain.length > 1 && chain.some((item) => !isConstType(item.typeAnnotation)))
           context.report({ node, messageId: "avoid" });
       }
+
       return { TSAsExpression: check, TSTypeAssertion: check };
     },
   }),
@@ -149,6 +162,7 @@ export const syntaxRules: Record<string, Rule> = {
         SpreadElement(node) {
           if (node.parent.type !== "ObjectExpression") return;
           const value = unwrap(node.argument);
+
           if (
             value.type === "ConditionalExpression" &&
             (isEmptyObject(value.consequent) || isEmptyObject(value.alternate))
@@ -169,9 +183,10 @@ export const syntaxRules: Record<string, Rule> = {
       return {
         CallExpression(node) {
           const path = referencePath(context, node.callee);
+
           if (
             path &&
-            /^(?:vi|jest|vitest\.vi|@jest\/globals\.jest)\.(?:mock|doMock|unstable_mockModule)$/.test(
+            /^(?:vi|vitest|jest|(?:vitest|vite-plus\/test)\.(?:vi|vitest)|@jest\/globals\.jest)\.(?:mock|doMock|unstable_mockModule)$/.test(
               path,
             )
           )
@@ -193,25 +208,28 @@ export const syntaxRules: Record<string, Rule> = {
     },
     create(context) {
       const option = context.options[0];
-      const allowInTypeGuards =
-        !!option &&
-        typeof option === "object" &&
-        !Array.isArray(option) &&
-        option.allowInTypeGuards === true;
+
+      const allowInTypeGuards = isOptionsObject(option) && option.allowInTypeGuards === true;
+
       return {
         UnaryExpression(node) {
           if (node.operator !== "typeof") return;
           let parent: Ast = node;
+
           while (parent.parent?.type === "ParenthesizedExpression") parent = parent.parent;
           const comparison = parent.parent;
+
           if (
             comparison?.type === "BinaryExpression" &&
             ["==", "===", "!=", "!=="].includes(comparison.operator)
           ) {
             const other = unwrap(comparison.left === parent ? comparison.right : comparison.left);
+
             if (other.type === "Literal" && other.value === "undefined") return;
           }
+
           const fn = enclosingFunction(node);
+
           if (allowInTypeGuards && fn?.returnType?.typeAnnotation.type === "TSTypePredicate")
             return;
           context.report({ node, messageId: "avoid" });
@@ -240,17 +258,22 @@ export const syntaxRules: Record<string, Rule> = {
       return {
         CallExpression(node) {
           const outer = unwrap(node.callee);
+
           if (outer.type !== "MemberExpression") return;
           const method = memberName(outer);
+
           if (method !== "map" && method !== "filter") return;
           const innerCall = unwrap(outer.object);
+
           if (innerCall.type !== "CallExpression") return;
           const inner = unwrap(innerCall.callee);
+
           if (
             inner.type !== "MemberExpression" ||
             memberName(inner) !== (method === "map" ? "filter" : "map")
           )
             return;
+
           if (isArray(context, inner.object)) context.report({ node, messageId: "avoid" });
         },
       };
@@ -267,4 +290,4 @@ export const syntaxRules: Record<string, Rule> = {
       return { CallExpression: (node) => checkReducerCopy(context, node) };
     },
   }),
-};
+} satisfies Record<string, Rule>;

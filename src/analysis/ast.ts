@@ -4,7 +4,7 @@ export type Ast = ESTree.Node;
 
 export type FunctionNode = ESTree.Function | ESTree.ArrowFunctionExpression;
 
-type Signature =
+export type Signature =
   | FunctionNode
   | ESTree.TSFunctionType
   | ESTree.TSConstructorType
@@ -171,10 +171,6 @@ export function isFunction(node: Ast): node is FunctionNode {
     node.type === "TSDeclareFunction" ||
     node.type === "TSEmptyBodyFunctionExpression"
   );
-}
-
-export function isSignature(node: Ast): node is Signature {
-  return "params" in node && "returnType" in node;
 }
 
 export function enclosingFunction(node: Ast): FunctionNode | undefined {

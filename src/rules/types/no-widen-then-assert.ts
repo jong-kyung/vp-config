@@ -1,5 +1,6 @@
 import { defineRule } from "vite-plus/lint/plugins";
-import { isConstType, walk } from "../../analysis/ast.ts";
+import type { ESTree } from "vite-plus/lint/plugins";
+import { isConstType } from "../../analysis/ast.ts";
 import { createTypeAnalysis } from "../../analysis/type-analysis.ts";
 
 export default defineRule({
@@ -10,18 +11,15 @@ export default defineRule({
     },
   },
   create(context) {
+    const types = createTypeAnalysis(context);
+    function check(node: ESTree.TSAsExpression | ESTree.TSTypeAssertion) {
+      if (!isConstType(node.typeAnnotation) && types.widened(node.expression))
+        context.report({ node, messageId: "avoid" });
+    }
+
     return {
-      "Program:exit"(program) {
-        const types = createTypeAnalysis(context);
-        walk(context, program, (node) => {
-          if (
-            (node.type === "TSAsExpression" || node.type === "TSTypeAssertion") &&
-            !isConstType(node.typeAnnotation) &&
-            types.widened(node.expression)
-          )
-            context.report({ node, messageId: "avoid" });
-        });
-      },
+      TSAsExpression: check,
+      TSTypeAssertion: check,
     };
   },
 });

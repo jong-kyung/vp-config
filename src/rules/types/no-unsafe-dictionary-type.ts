@@ -1,5 +1,5 @@
 import { defineRule } from "vite-plus/lint/plugins";
-import { walk } from "../../analysis/ast.ts";
+import type { ESTree } from "vite-plus/lint/plugins";
 import type { Ast } from "../../analysis/ast.ts";
 import { createTypeAnalysis } from "../../analysis/type-analysis.ts";
 
@@ -29,23 +29,22 @@ export default defineRule({
     },
   },
   create(context) {
-    return {
-      "Program:exit"(program) {
-        const types = createTypeAnalysis(context);
-        walk(context, program, (node) => {
-          if (inConstraint(node)) return;
+    const types = createTypeAnalysis(context);
+    function check(node: ESTree.TSIndexSignature | ESTree.TSTypeReference | ESTree.TSMappedType) {
+      if (inConstraint(node)) return;
 
-          if (node.type === "TSIndexSignature") {
-            if (types.unsafeValue(types.use(node.typeAnnotation.typeAnnotation)))
-              context.report({ node, messageId: "avoid" });
-          } else if (
-            (node.type === "TSTypeReference" || node.type === "TSMappedType") &&
-            types.unsafeDictionary(types.use(node))
-          ) {
-            context.report({ node, messageId: "avoid" });
-          }
-        });
-      },
+      const unsafe =
+        node.type === "TSIndexSignature"
+          ? types.unsafeValue(types.use(node.typeAnnotation.typeAnnotation))
+          : types.unsafeDictionary(types.use(node));
+
+      if (unsafe) context.report({ node, messageId: "avoid" });
+    }
+
+    return {
+      TSIndexSignature: check,
+      TSTypeReference: check,
+      TSMappedType: check,
     };
   },
 });

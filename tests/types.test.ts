@@ -14,6 +14,7 @@ for (const [name, cases] of Object.entries({
       "function run(value: User) {}",
       "type Input = object; function outer() { type Input = string; function run(value: Input) {} }",
       "type Loop = Loop; function run(value: Loop) {}",
+      "function outer() { function run(value: Input) {} type Input = string; } type Input = object;",
     ],
     invalid: [
       { code: "function run(value: object) {}", errors: 1 },
@@ -21,6 +22,7 @@ for (const [name, cases] of Object.entries({
       { code: "type Box<T> = T; function run(value: Box<object>) {}", errors: 1 },
       { code: "type Callback = (value: object) => void;", errors: 1 },
       { code: "class C { constructor(public value: object) {} }", errors: 1 },
+      { code: "function run(value: Input) {} type Input = object;", errors: 1 },
     ],
   },
   "no-unknown-parameters": {
@@ -44,6 +46,15 @@ for (const [name, cases] of Object.entries({
         errors: 1,
       },
       { code: "interface Service { run(input: unknown): void; }", errors: 1 },
+      { code: "const run = function(input: unknown) {};", errors: 1 },
+      { code: "const run = (input: unknown) => {};", errors: 1 },
+      { code: "declare function run(input: unknown): void;", errors: 1 },
+      { code: "declare class Service { run(input: unknown): void; }", errors: 1 },
+      { code: "type Callback = (input: unknown) => void;", errors: 1 },
+      { code: "type Factory = new(input: unknown) => Service;", errors: 1 },
+      { code: "interface Callback { (input: unknown): void; }", errors: 1 },
+      { code: "interface Factory { new(input: unknown): Service; }", errors: 1 },
+      { code: "declare function run(input: Input): void; type Input = unknown;", errors: 1 },
     ],
   },
   "no-unknown-returns": {
@@ -57,6 +68,14 @@ for (const [name, cases] of Object.entries({
       { code: "async function run(): Promise<unknown> { return value; }", errors: 1 },
       { code: "type Box<T> = T; const run = (): PromiseLike<Box<unknown>> => value;", errors: 1 },
       { code: "interface Service { run(): unknown; }", errors: 1 },
+      { code: "const run = function(): unknown { return null; };", errors: 1 },
+      { code: "declare function run(): unknown;", errors: 1 },
+      { code: "declare class Service { run(): unknown; }", errors: 1 },
+      { code: "type Callback = () => unknown;", errors: 1 },
+      { code: "type Factory = new() => unknown;", errors: 1 },
+      { code: "interface Callback { (): unknown; }", errors: 1 },
+      { code: "interface Factory { new(): unknown; }", errors: 1 },
+      { code: "function run(): Result { return null; } type Result = unknown;", errors: 1 },
     ],
   },
   "no-unknown-type-aliases": {
@@ -74,6 +93,7 @@ for (const [name, cases] of Object.entries({
       { code: "type Raw = unknown;", errors: 1 },
       { code: "type Identity<T = unknown> = T; type Raw = Identity;", errors: 1 },
       { code: "type A = unknown; type B = A;", errors: 2 },
+      { code: "type B = A; type A = unknown;", errors: 2 },
       { code: "type Raw = unknown | string;", errors: 1 },
       { code: "type Identity<T> = T; type Raw = Identity<unknown>;", errors: 1 },
       { code: "function run() { type Raw = unknown; }", errors: 1 },
@@ -85,6 +105,7 @@ for (const [name, cases] of Object.entries({
       "function run<T extends Record<string, unknown>>(value: T) {}",
       "type Record<K, V> = { value: string }; type Value = Record<string, unknown>;",
       "type User = { value: unknown };",
+      "type Identity<T extends { nested: Record<string, unknown> }> = T;",
     ],
     invalid: [
       { code: "type Data = Record<string, unknown>;", errors: 1 },
@@ -93,6 +114,10 @@ for (const [name, cases] of Object.entries({
       { code: "interface Data { [key: string]: {}; }", errors: 1 },
       { code: "type Wide = unknown; type Data = Record<string, Wide>;", errors: 1 },
       { code: "type Data = { [K in string]: unknown };", errors: 1 },
+      {
+        code: "type Identity<T extends Record<string, unknown> = Record<string, unknown>> = T;",
+        errors: 1,
+      },
     ],
   },
   "no-trivial-type-aliases": {
@@ -108,6 +133,7 @@ for (const [name, cases] of Object.entries({
     invalid: [
       { code: "type Id = string;", errors: 1 },
       { code: "type A = number; type B = A;", errors: 2 },
+      { code: "type B = A; type A = number;", errors: 2 },
       { code: "export type Flag = boolean;", errors: 1 },
     ],
   },
@@ -131,6 +157,7 @@ for (const [name, cases] of Object.entries({
       },
       { code: "function run(): unknown { return 123; }", errors: 1 },
       { code: "const run = (): object => ({ name: 'Kim' });", errors: 1 },
+      { code: "accept(1); function accept(value: unknown) {}", errors: 1 },
     ],
   },
   "no-widen-then-assert": {
@@ -147,6 +174,7 @@ for (const [name, cases] of Object.entries({
       },
       { code: "const erased: unknown = 123; const alias = erased; alias as number;", errors: 1 },
       { code: "const erased: any = { name: 'Kim' }; erased as User;", errors: 1 },
+      { code: "erased as number; const erased: unknown = 123;", errors: 1 },
       {
         code: "const value = { name: 'Kim' } as unknown; const result = value as User;",
         errors: 1,

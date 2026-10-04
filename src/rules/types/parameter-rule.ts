@@ -1,7 +1,6 @@
 import { defineRule } from "vite-plus/lint/plugins";
 import type { ESTree, Rule } from "vite-plus/lint/plugins";
-import { isSignature, walk } from "../../analysis/ast.ts";
-import type { Ast } from "../../analysis/ast.ts";
+import type { Ast, Signature } from "../../analysis/ast.ts";
 import { createTypeAnalysis } from "../../analysis/type-analysis.ts";
 
 function parameterBinding(node: ESTree.ParamPattern): Ast {
@@ -24,34 +23,41 @@ export function parameterRule(kind: "TSUnknownKeyword" | "TSObjectKeyword"): Rul
       },
     },
     create(context) {
+      const types = createTypeAnalysis(context);
+      function check(node: Signature) {
+        for (const parameter of node.params) {
+          const target = parameterBinding(parameter);
+          const type = types.annotation(parameter);
+
+          if (!type || !types.contains(types.use(type), [kind])) continue;
+
+          if (kind === "TSUnknownKeyword" && target.type === "Identifier") {
+            if (target.name === "cause") continue;
+            const predicate = node.returnType?.typeAnnotation;
+
+            if (
+              predicate?.type === "TSTypePredicate" &&
+              predicate.parameterName.type === "Identifier" &&
+              predicate.parameterName.name === target.name
+            )
+              continue;
+          }
+
+          context.report({ node: type, messageId: "avoid" });
+        }
+      }
+
       return {
-        "Program:exit"(program) {
-          const types = createTypeAnalysis(context);
-          walk(context, program, (node) => {
-            if (!isSignature(node)) return;
-
-            for (const parameter of node.params) {
-              const target = parameterBinding(parameter);
-              const type = types.annotation(parameter);
-
-              if (!type || !types.contains(types.use(type), [kind])) continue;
-
-              if (kind === "TSUnknownKeyword" && target.type === "Identifier") {
-                if (target.name === "cause") continue;
-                const predicate = node.returnType?.typeAnnotation;
-
-                if (
-                  predicate?.type === "TSTypePredicate" &&
-                  predicate.parameterName.type === "Identifier" &&
-                  predicate.parameterName.name === target.name
-                )
-                  continue;
-              }
-
-              context.report({ node: type, messageId: "avoid" });
-            }
-          });
-        },
+        FunctionDeclaration: check,
+        FunctionExpression: check,
+        ArrowFunctionExpression: check,
+        TSDeclareFunction: check,
+        TSEmptyBodyFunctionExpression: check,
+        TSFunctionType: check,
+        TSConstructorType: check,
+        TSCallSignatureDeclaration: check,
+        TSConstructSignatureDeclaration: check,
+        TSMethodSignature: check,
       };
     },
   });

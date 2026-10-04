@@ -9,6 +9,7 @@ interface TypeUse {
 
 export function createTypeAnalysis(context: Context) {
   const scopes = new Map<Ast, Map<string, ESTree.TSTypeAliasDeclaration | null>>();
+  let indexed = false;
 
   function declare(node: Ast, name: string, alias: ESTree.TSTypeAliasDeclaration | null) {
     let owner = node.parent;
@@ -27,20 +28,23 @@ export function createTypeAnalysis(context: Context) {
     entries.set(name, alias);
   }
 
-  walk(context, context.sourceCode.ast, (node) => {
-    if (node.type === "TSTypeAliasDeclaration") declare(node, node.id.name, node);
-    else if (node.type === "TSInterfaceDeclaration" || node.type === "ClassDeclaration") {
-      if (node.id) declare(node, node.id.name, null);
-    } else if (
-      node.type === "ImportSpecifier" ||
-      node.type === "ImportDefaultSpecifier" ||
-      node.type === "ImportNamespaceSpecifier"
-    ) {
-      declare(node, node.local.name, null);
-    }
-  });
-
   function lookup(name: string, from: Ast): ESTree.TSTypeAliasDeclaration | null | undefined {
+    if (!indexed) {
+      walk(context, context.sourceCode.ast, (node) => {
+        if (node.type === "TSTypeAliasDeclaration") declare(node, node.id.name, node);
+        else if (node.type === "TSInterfaceDeclaration" || node.type === "ClassDeclaration") {
+          if (node.id) declare(node, node.id.name, null);
+        } else if (
+          node.type === "ImportSpecifier" ||
+          node.type === "ImportDefaultSpecifier" ||
+          node.type === "ImportNamespaceSpecifier"
+        ) {
+          declare(node, node.local.name, null);
+        }
+      });
+      indexed = true;
+    }
+
     let node: Ast | null = from;
 
     while (node) {

@@ -1,4 +1,5 @@
 import { defineConfig } from "vite-plus";
+import { nativeLint } from "./src/native.ts";
 
 export default defineConfig({
   staged: {
@@ -16,11 +17,6 @@ export default defineConfig({
     },
     exports: true,
   },
-  lint: {
-    options: {
-      typeAware: true,
-      typeCheck: true,
-    },
-  },
+  lint: nativeLint,
   fmt: {},
 });

@@ -57,7 +57,7 @@ For a local exception, use an Oxlint suppression comment with a reason. Assertio
 
 ## Policy
 
-The preset enables 114 rules: 94 errors and 20 warnings. It uses 93 native rules and 21 independently implemented JavaScript rules. It also records 28 native rules as disabled. See [the complete decisions](docs/rules.md) for severities and native options.
+The preset enables 114 rules: 94 errors and 20 warnings. It uses 93 native rules and 21 independently implemented JavaScript rules. It also records 28 native rules as disabled. See [the native configuration](src/native.ts) and [preset exports](src/index.ts) for severities and options.
 
 All seven native categories are disabled before the reviewed rule map is applied, which prevents unreviewed default rules from entering the preset. The native plugins are TypeScript, Oxc, and Unicorn. Consumers can add plugins or override rules through native configuration.
 
@@ -129,4 +129,4 @@ Publishing, pushing, and creating a pull request are separate manual steps.
 
 ## License
 
-MIT. The custom implementations use independently written code and regression cases. Behavioral references and their pinned revisions are recorded in [the design](https://github.com/jong-kyung/vp-config/blob/main/docs/design.md).
+MIT. The custom implementations use independently written code and regression cases. Behavioral references are anti-slop at `c44ef22ca116d0ba62a3ff663a0bd13a3f3fa40b` and eslint-plugin-slop at `98391afefc5000c0a40dfaf83c647dce479a80ee`.

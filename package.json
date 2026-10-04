@@ -13,8 +13,7 @@
     "url": "git+https://github.com/jong-kyung/vp-config.git"
   },
   "files": [
-    "dist",
-    "docs/rules.md"
+    "dist"
   ],
   "type": "module",
   "exports": {

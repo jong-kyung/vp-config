@@ -19,7 +19,9 @@ const documentationTargets = new Set([
 ]);
 
 function directiveComment(comment: ESTree.Comment): boolean {
-  return /(?:^|\n)\s*\*?\s*(?:eslint|oxlint|@ts-|prettier|istanbul|c8\b|v8\b|biome|deno-lint|[@#]__(?:PURE|NO_SIDE_EFFECTS)__|@vite-ignore|@license|@preserve|sourceMappingURL|sourceURL|webpack|\/)/.test(
+  if (comment.type === "Line" && comment.value.startsWith("/")) return true;
+
+  return /(?:^|\n)\s*\*?\s*(?:eslint|oxlint|@ts-|prettier|istanbul|c8\b|v8\b|biome|deno-lint|[@#]__(?:PURE|NO_SIDE_EFFECTS)__|@vite-ignore|@license|@preserve|sourceMappingURL|sourceURL|webpack)/.test(
     comment.value,
   );
 }

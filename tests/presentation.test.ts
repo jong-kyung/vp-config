@@ -21,6 +21,10 @@ for (const [name, cases] of Object.entries({
       "const x = [1] as const;",
       "// SAFETY: The parser validated this identifier.\nexport const id = value as Id;",
       "const id = /* SAFETY: Validation ran at the boundary. */ value as Id;",
+      "class C {\n  // SAFETY: The decoder checked this value.\n  value = raw as Value;\n}",
+      "class C {\n  // SAFETY: The decoder checked this value.\n  accessor value = raw as Value;\n}",
+      "class C {\n  // SAFETY: The decoder checked this value.\n  static #value = raw as Value;\n}",
+      "class C { value = /* SAFETY: The decoder checked this value. */ raw as Value; }",
       "/** SAFETY: The decoder checked the payload. */\nconst payload = (\n  value as Payload\n);",
       {
         code: "// INVARIANT: The bounds were checked.\nconst id = value as Id;",
@@ -40,6 +44,18 @@ for (const [name, cases] of Object.entries({
         errors: 1,
       },
       { code: "const id = <Id>value;", errors: 1 },
+      {
+        code: "// SAFETY: This documents the class, not its fields.\nclass C {\n  value = raw as Value;\n  other = data as Other;\n}",
+        errors: 2,
+      },
+      {
+        code: "// SAFETY: This documents the class, not its accessor.\nclass C { accessor value = raw as Value; }",
+        errors: 1,
+      },
+      {
+        code: "class C {\n  // SAFETY: Only the first value was decoded.\n  first = raw as Value;\n  second = data as Other;\n}",
+        errors: 1,
+      },
     ],
   },
   "prefer-jsdoc": {
@@ -55,8 +71,29 @@ for (const [name, cases] of Object.entries({
       "const object = {\n  // Property explanation.\n  value: 1,\n};",
       "// Detached heading.\n\nconst value = 1;",
       "/// <reference types='node' />\nconst value = 1;",
+      "/// <amd-module name='example' />\nconst value = 1;",
     ],
     invalid: [
+      {
+        code: "// See https://example.com\nconst value = 1;",
+        output: "/** See https://example.com */\nconst value = 1;",
+        errors: 1,
+      },
+      {
+        code: "// Input/output mapping.\nconst value = 1;",
+        output: "/** Input/output mapping. */\nconst value = 1;",
+        errors: 1,
+      },
+      {
+        code: "// /api/users endpoint.\nconst value = 1;",
+        output: "/** /api/users endpoint. */\nconst value = 1;",
+        errors: 1,
+      },
+      {
+        code: "/* /api/users endpoint. */\nconst value = 1;",
+        output: "/** /api/users endpoint. */\nconst value = 1;",
+        errors: 1,
+      },
       {
         code: "// User-facing name.\nexport const name = 'Kim';",
         output: "/** User-facing name. */\nexport const name = 'Kim';",

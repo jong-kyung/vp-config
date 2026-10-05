@@ -90,6 +90,14 @@ for (const [name, cases] of Object.entries({
       "//\nconst value = 1;",
       "/* */\nconst value = 1;",
       "/** User-facing name. */\nconst name = 'Kim';",
+      "/*! Copyright Example */\nconst value = 1;",
+      "/*! Copyright Example */\nexport function run() {}",
+      "/*!\r\n * Copyright Example\r\n */\r\nclass Example {}",
+      "/*! Copyright Example */\n// Details.\nconst value = 1;",
+      "/*! Copyright Example */\n\nconst value = 1;",
+      "/* @license MIT */\nconst value = 1;",
+      "/* @preserve attribution */\nconst value = 1;",
+      "class Example {\n  /*! Preserve this. */\n  value = 1;\n}",
       "// oxlint-disable-next-line no-debugger\ndebugger;",
       "// @ts-expect-error: Intentionally invalid input.\nconst value: number = '';",
       "// prettier-ignore\nconst value = { a: 1 };",
@@ -128,6 +136,11 @@ for (const [name, cases] of Object.entries({
       {
         code: "/* User-facing name. */\nconst name = 'Kim';",
         output: "/** User-facing name. */\nconst name = 'Kim';",
+        errors: 1,
+      },
+      {
+        code: "/* ! Ordinary explanation. */\nconst value = 1;",
+        output: "/** ! Ordinary explanation. */\nconst value = 1;",
         errors: 1,
       },
       {

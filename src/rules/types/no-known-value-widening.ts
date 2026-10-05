@@ -60,7 +60,7 @@ export default defineRule({
         const fn = types.functionValue(node.callee);
 
         if (!fn) return;
-        const first = fn.params[0];
+        const first = fn.node.params[0];
         const offset = first?.type === "Identifier" && first.name === "this" ? 1 : 0;
         const bindings = types.callBindings(node, fn);
 
@@ -70,7 +70,7 @@ export default defineRule({
         for (const argument of node.arguments) {
           /** ponytail: stop at spreads. Add tuple-arity analysis to check later arguments. */
           if (argument.type === "SpreadElement") break;
-          const parameter = fn.params[parameterIndex];
+          const parameter = fn.node.params[parameterIndex];
 
           if (!parameter) break;
           const annotation = types.annotation(parameter);

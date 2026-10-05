@@ -8,7 +8,9 @@ export default defineRule({
 
     return {
       TSTypeAliasDeclaration(node) {
-        if (types.contains(types.use(node.typeAnnotation), ["TSUnknownKeyword"]))
+        const bindings = types.defaultBindings(node.typeParameters);
+
+        if (types.contains(types.use(node.typeAnnotation, bindings), ["TSUnknownKeyword"]))
           context.report({ node, messageId: "avoid" });
       },
     };

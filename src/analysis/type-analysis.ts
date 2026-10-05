@@ -1,17 +1,14 @@
 import type { Context, ESTree, Variable } from "vite-plus/lint/plugins";
-import {
-  binding,
-  declaration,
-  isFunction,
-  isTransparentWrapper,
-  resolveValue,
-  unwrap,
-  walk,
-} from "./ast.ts";
+import { binding, declaration, isFunction, isTransparentWrapper, unwrap, walk } from "./ast.ts";
 import type { Ast, FunctionNode } from "./ast.ts";
 
 export interface TypeUse {
   node: ESTree.TSType;
+  bindings: ReadonlyMap<string, TypeUse>;
+}
+
+interface FunctionUse {
+  node: FunctionNode | ESTree.TSFunctionType;
   bindings: ReadonlyMap<string, TypeUse>;
 }
 
@@ -84,6 +81,17 @@ export function createTypeAnalysis(context: Context) {
     return { node, bindings };
   }
 
+  function defaultBindings(
+    parameters: ESTree.TSTypeParameterDeclaration | null | undefined,
+    bindings = new Map<string, TypeUse>(),
+  ) {
+    for (const parameter of parameters?.params ?? []) {
+      if (parameter.default) bindings.set(parameter.name.name, use(parameter.default, bindings));
+    }
+
+    return bindings;
+  }
+
   function expand(input: TypeUse, unwrapReadonly = false): TypeUse {
     let current = input;
     const seen = new Set<Ast>();
@@ -125,14 +133,12 @@ export function createTypeAnalysis(context: Context) {
       const alias = lookup(node.typeName.name, node);
 
       if (alias?.type !== "TSTypeAliasDeclaration") return current;
-      const argumentsMap = new Map<string, TypeUse>();
+      const argumentsMap = defaultBindings(alias.typeParameters);
 
       for (const [index, parameter] of (alias.typeParameters?.params ?? []).entries()) {
         const argument = node.typeArguments?.params[index];
 
         if (argument) argumentsMap.set(parameter.name.name, use(argument, current.bindings));
-        else if (parameter.default)
-          argumentsMap.set(parameter.name.name, use(parameter.default, argumentsMap));
       }
 
       current = use(alias.typeAnnotation, argumentsMap);
@@ -334,15 +340,34 @@ export function createTypeAnalysis(context: Context) {
     return undefined;
   }
 
-  function functionValue(node: Ast): FunctionNode | undefined {
-    const value = resolveValue(context, node);
+  function functionValue(input: Ast, seen = new Set<Variable>()): FunctionUse | undefined {
+    const node = unwrap(input);
 
-    if (isFunction(value)) return value;
-    const variable = binding(context, value);
+    if (isFunction(node)) return { node, bindings: new Map() };
+    const variable = binding(context, node);
 
+    if (!variable || seen.has(variable)) return undefined;
+    seen.add(variable);
+
+    for (const identifier of variable.identifiers) {
+      const type = annotation(identifier);
+
+      if (type) {
+        const current = expand(use(type));
+
+        /** An explicit contract takes precedence, even when its callable shape is unresolved. */
+        return current.node.type === "TSFunctionType"
+          ? { node: current.node, bindings: current.bindings }
+          : undefined;
+      }
+    }
+
+    const decl = declaration(context, node);
+
+    if (decl?.id.type === "Identifier" && decl.init) return functionValue(decl.init, seen);
     let fn: FunctionNode | undefined;
 
-    for (const definition of variable?.defs ?? []) {
+    for (const definition of variable.defs) {
       if (!isFunction(definition.node)) continue;
 
       /** Overload selection requires argument type information unavailable to this analysis. */
@@ -350,19 +375,25 @@ export function createTypeAnalysis(context: Context) {
       fn = definition.node;
     }
 
-    return fn;
+    return fn && { node: fn, bindings: new Map() };
   }
 
-  function callBindings(node: ESTree.CallExpression, fn: FunctionNode) {
-    if (!node.typeArguments || !fn.typeParameters) return undefined;
-    const bindings = new Map<string, TypeUse>();
+  function callBindings(node: ESTree.CallExpression, fn: FunctionUse) {
+    const parameters = fn.node.typeParameters;
 
-    for (const [index, parameter] of fn.typeParameters.params.entries()) {
+    if (!parameters) return fn.bindings;
+    const bindings = new Map(fn.bindings);
+
+    /** Function generics shadow alias bindings, but omitted call arguments still use inference. */
+    for (const parameter of parameters.params) bindings.delete(parameter.name.name);
+
+    if (!node.typeArguments) return bindings;
+    defaultBindings(parameters, bindings);
+
+    for (const [index, parameter] of parameters.params.entries()) {
       const argument = node.typeArguments.params[index];
 
       if (argument) bindings.set(parameter.name.name, use(argument));
-      else if (parameter.default)
-        bindings.set(parameter.name.name, use(parameter.default, bindings));
     }
 
     return bindings;
@@ -384,11 +415,38 @@ export function createTypeAnalysis(context: Context) {
       return node.types.every((type) => knownType(use(type, current.bindings), next));
     }
 
-    return (
-      node.type !== "TSTypeReference" ||
-      node.typeName.type !== "Identifier" ||
-      lookup(node.typeName.name, node)?.type !== "TSTypeParameter"
-    );
+    if (node.type === "TSTypeReference")
+      return (
+        node.typeName.type !== "Identifier" ||
+        lookup(node.typeName.name, node)?.type !== "TSTypeParameter"
+      );
+
+    if (
+      node.type === "TSTypeOperator" &&
+      (node.operator === "readonly" || node.operator === "unique")
+    )
+      return knownType(use(node.typeAnnotation, current.bindings), new Set(seen).add(node));
+
+    /** Unsupported type computations are not evidence of a known result. */
+    return [
+      "TSStringKeyword",
+      "TSNumberKeyword",
+      "TSBooleanKeyword",
+      "TSBigIntKeyword",
+      "TSSymbolKeyword",
+      "TSNullKeyword",
+      "TSUndefinedKeyword",
+      "TSVoidKeyword",
+      "TSNeverKeyword",
+      "TSThisType",
+      "TSLiteralType",
+      "TSTemplateLiteralType",
+      "TSArrayType",
+      "TSTupleType",
+      "TSTypeLiteral",
+      "TSFunctionType",
+      "TSConstructorType",
+    ].includes(node.type);
   }
 
   function known(node: Ast, seen = new Set<Variable>()): boolean {
@@ -438,9 +496,9 @@ export function createTypeAnalysis(context: Context) {
     if (node.type === "CallExpression") {
       const fn = functionValue(node.callee);
 
-      if (!fn?.returnType) return false;
+      if (!fn?.node.returnType) return false;
 
-      return knownType(use(fn.returnType.typeAnnotation, callBindings(node, fn)));
+      return knownType(use(fn.node.returnType.typeAnnotation, callBindings(node, fn)));
     }
 
     if (node.type === "ConditionalExpression")
@@ -508,6 +566,7 @@ export function createTypeAnalysis(context: Context) {
     widened,
     functionValue,
     callBindings,
+    defaultBindings,
     restElement,
   };
 }

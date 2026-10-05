@@ -10,6 +10,7 @@ function assertionAnchor(node: Ast): Ast {
   while (anchor.parent && anchor.parent.type !== "Program" && !isFunction(anchor.parent)) {
     if (
       /Statement$|Declaration$/.test(anchor.type) ||
+      anchor.type === "Property" ||
       anchor.type === "PropertyDefinition" ||
       anchor.type === "AccessorProperty"
     )

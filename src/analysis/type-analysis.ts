@@ -84,8 +84,9 @@ export function createTypeAnalysis(context: Context) {
     return { node, bindings };
   }
 
-  function expand(input: TypeUse, seen = new Set<Ast>()): TypeUse {
+  function expand(input: TypeUse, unwrapReadonly = false): TypeUse {
     let current = input;
+    const seen = new Set<Ast>();
     const substitutions = new Set<TypeUse>();
 
     for (;;) {
@@ -104,6 +105,17 @@ export function createTypeAnalysis(context: Context) {
         if (substitutions.has(current)) return current;
         substitutions.add(current);
         current = replacement;
+
+        continue;
+      }
+
+      if (unwrapReadonly && standard(current, "Readonly")) {
+        const argument = node.typeArguments?.params[0];
+
+        /** Generic wrappers can share an AST node while carrying different bindings. */
+        if (!argument || substitutions.has(current)) return current;
+        substitutions.add(current);
+        current = use(argument, current.bindings);
 
         continue;
       }
@@ -195,7 +207,7 @@ export function createTypeAnalysis(context: Context) {
     if (standard(current, "Record") && node.type === "TSTypeReference") {
       const value = node.typeArguments?.params[1];
 
-      return !!value && unsafeValue(use(value, current.bindings));
+      return !!value && openDictionary(current) && unsafeValue(use(value, current.bindings));
     }
 
     if (node.type === "TSTypeLiteral") {
@@ -206,7 +218,7 @@ export function createTypeAnalysis(context: Context) {
       );
     }
 
-    if (node.type === "TSMappedType" && node.typeAnnotation)
+    if (node.type === "TSMappedType" && node.typeAnnotation && openDictionary(current))
       return unsafeValue(use(node.typeAnnotation, current.bindings));
 
     return false;
@@ -243,9 +255,7 @@ export function createTypeAnalysis(context: Context) {
     );
   }
 
-  function wide(type: ESTree.TSType, includeAny = false): boolean {
-    const input = use(type);
-
+  function wide(input: TypeUse, includeAny = false): boolean {
     return (
       contains(
         input,
@@ -253,7 +263,7 @@ export function createTypeAnalysis(context: Context) {
           ? ["TSUnknownKeyword", "TSObjectKeyword", "TSAnyKeyword"]
           : ["TSUnknownKeyword", "TSObjectKeyword"],
       ) ||
-      type.type === "TSTypeLiteral" ||
+      input.node.type === "TSTypeLiteral" ||
       openDictionary(input)
     );
   }
@@ -285,6 +295,21 @@ export function createTypeAnalysis(context: Context) {
     }
 
     return fn;
+  }
+
+  function callBindings(node: ESTree.CallExpression, fn: FunctionNode) {
+    if (!node.typeArguments || !fn.typeParameters) return undefined;
+    const bindings = new Map<string, TypeUse>();
+
+    for (const [index, parameter] of fn.typeParameters.params.entries()) {
+      const argument = node.typeArguments.params[index];
+
+      if (argument) bindings.set(parameter.name.name, use(argument));
+      else if (parameter.default)
+        bindings.set(parameter.name.name, use(parameter.default, bindings));
+    }
+
+    return bindings;
   }
 
   function knownType(input: TypeUse, seen = new Set<Ast>()): boolean {
@@ -356,9 +381,10 @@ export function createTypeAnalysis(context: Context) {
 
     if (node.type === "CallExpression") {
       const fn = functionValue(node.callee);
-      const type = fn?.returnType?.typeAnnotation;
 
-      return !!type && knownType(use(type));
+      if (!fn?.returnType) return false;
+
+      return knownType(use(fn.returnType.typeAnnotation, callBindings(node, fn)));
     }
 
     if (node.type === "ConditionalExpression")
@@ -396,13 +422,13 @@ export function createTypeAnalysis(context: Context) {
     const next = new Set(seen).add(variable);
     const type = annotation(decl.id);
 
-    if (type && wide(type, true) && known(decl.init)) return true;
+    if (type && wide(use(type), true) && known(decl.init)) return true;
     let initializer: Ast = decl.init;
 
     while (isTransparentWrapper(initializer)) {
       if (
         (initializer.type === "TSAsExpression" || initializer.type === "TSTypeAssertion") &&
-        wide(initializer.typeAnnotation, true) &&
+        wide(use(initializer.typeAnnotation), true) &&
         known(initializer.expression)
       )
         return true;
@@ -425,5 +451,6 @@ export function createTypeAnalysis(context: Context) {
     known,
     widened,
     functionValue,
+    callBindings,
   };
 }

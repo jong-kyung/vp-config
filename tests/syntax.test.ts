@@ -172,6 +172,13 @@ for (const [name, cases] of Object.entries({
       "import type { Values } from './external'; function run(values: Values) { return values.filter(test).map(convert); }",
       "import Array = Custom.Array; function run(values: Array<number>) { return values.filter(test).map(convert); }",
       "function run<Array>(values: Array) { return values.filter(test).map(convert); }",
+      "type Readonly<T> = IteratorObject<number>; function run(values: Readonly<number[]>) { return values.filter(test).map(convert); }",
+      "import type { Readonly } from './custom'; function run(values: Readonly<number[]>) { return values.filter(test).map(convert); }",
+      "function run<Readonly>(values: Readonly) { return values.filter(test).map(convert); }",
+      "type Values = Readonly<Values>; function run(values: Values) { return values.filter(test).map(convert); }",
+      "type Loop<T = Readonly<T>> = T; function run(values: Loop) { return values.filter(test).map(convert); }",
+      "type Loop<T> = Readonly<Loop<T>>; function run(values: Loop<number[]>) { return values.filter(test).map(convert); }",
+      "function run(values: Readonly<{ filter: Function; map: Function }>) { return values.filter(test).map(convert); }",
       "type Identity<Array> = Array; function run(values: Identity<IteratorObject<number>>) { return values.filter(test).map(convert); }",
       "type Values<T> = T; function run<T>(values: Values<T>) { return values.filter(test).map(convert); }",
       "type Values = number[]; function run<Values>(values: Values) { return values.filter(test).map(convert); }",
@@ -233,6 +240,42 @@ for (const [name, cases] of Object.entries({
         errors: 1,
       },
       { code: "Array(1, 2).filter(test).map(convert);", errors: 1 },
+      {
+        code: "function run(values: Readonly<number[]>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run(values: Readonly<[number, number]>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run(values: Readonly<readonly number[]>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run(values: Readonly<ReadonlyArray<number>>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "type Values<T> = Readonly<T[]>; function run(values: Values<number>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "type Wrap<T> = Readonly<T>; function run(values: Wrap<Wrap<number[]>>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "type Wrap<T = number[]> = Readonly<T>; function run(values: Wrap) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run([values]: Readonly<[number[]]>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run({ values }: Readonly<{ values: number[] }>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
       {
         code: "type Values = number[]; function run(values: Values) { return values.filter(test).map(convert); }",
         errors: 1,
@@ -312,6 +355,10 @@ for (const [name, cases] of Object.entries({
     valid: [
       "items.reduce((acc, item) => { acc.push(item); return acc; }, []);",
       "items.reduce((acc, item) => Object.assign(acc, item), {});",
+      "items.reduce((acc, item) => Object.assign(acc as Result, item), {});",
+      "items.reduce((acc, item) => Object.assign(target as Result, acc, item), {});",
+      "function run(Object) { return items.reduce((acc, item) => Object.assign({} as Result, acc, item), {}); }",
+      "items.reduce((acc, item) => Object.assign({} as Result, item), {});",
       "items.reduce((acc, item) => item.slice(), []);",
       "items.reduce((acc, item) => acc.concat(item), '');",
       "function run(Array) { return items.reduce((acc, item) => acc.concat(item), Array()); }",
@@ -349,6 +396,24 @@ for (const [name, cases] of Object.entries({
       },
       { code: "const A = Array; items.reduce((acc, item) => acc.slice(), A());", errors: 1 },
       { code: "items.reduce((acc, item) => Object.assign({}, acc, item), {});", errors: 1 },
+      {
+        code: "items.reduce((acc, item) => Object.assign({} as Result, acc, item), {});",
+        errors: 1,
+      },
+      {
+        code: "items.reduce((acc, item) => Object.assign({} satisfies Result, acc, item), {});",
+        errors: 1,
+      },
+      { code: "items.reduce((acc, item) => Object.assign(({})!, acc, item), {});", errors: 1 },
+      { code: "items.reduce((acc, item) => Object.assign(<Result>{}, acc, item), {});", errors: 1 },
+      {
+        code: "const assign = Object.assign; items.reduceRight((acc, item) => assign(({ value: item } as Result)!, acc), {});",
+        errors: 1,
+      },
+      {
+        code: "function run(values: Readonly<number[]>) { return items.reduce((acc, item) => acc.concat(item), values); }",
+        errors: 1,
+      },
       { code: "items.reduce((acc, item) => Array.from(acc), []);", errors: 1 },
       { code: "items.reduce(((acc, item) => acc.concat(item)) as Reducer, []);", errors: 1 },
       { code: "items.reduce(((acc, item) => acc.concat(item)) satisfies Reducer, []);", errors: 1 },

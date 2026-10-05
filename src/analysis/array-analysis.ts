@@ -17,7 +17,7 @@ export function createArrayAnalysis(context: Context) {
 
   function arrayType(input: TypeUse | undefined): TypeUse | undefined {
     if (input && isArrayReference(input)) return input;
-    const current = input && types.expand(input);
+    const current = input && types.expand(input, true);
 
     if (current?.node.type === "TSTypeOperator" && current.node.operator === "readonly")
       return types.use(current.node.typeAnnotation, current.bindings);

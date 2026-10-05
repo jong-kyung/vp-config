@@ -46,7 +46,11 @@ function checkReducerCopy(
   const arrayAccumulator = (initial && isArray(initial)) || isArray(accumulator);
   let copies = false;
 
-  if (path === "Object.assign" && node.arguments[0]?.type === "ObjectExpression") {
+  if (
+    path === "Object.assign" &&
+    node.arguments[0] &&
+    unwrap(node.arguments[0]).type === "ObjectExpression"
+  ) {
     copies = node.arguments.slice(1).some(isAccumulator);
   } else if (arrayAccumulator && path === "Array.from" && node.arguments[0]) {
     copies = isAccumulator(node.arguments[0]);

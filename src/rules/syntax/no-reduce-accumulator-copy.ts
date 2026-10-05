@@ -3,7 +3,6 @@ import type { Context, ESTree } from "vite-plus/lint/plugins";
 import {
   binding,
   enclosingFunction,
-  isArray,
   isTransparentWrapper,
   memberName,
   referencePath,
@@ -11,8 +10,13 @@ import {
   unwrap,
 } from "../../analysis/ast.ts";
 import type { Ast } from "../../analysis/ast.ts";
+import { createArrayAnalysis } from "../../analysis/array-analysis.ts";
 
-function checkReducerCopy(context: Context, node: ESTree.CallExpression): void {
+function checkReducerCopy(
+  context: Context,
+  node: ESTree.CallExpression,
+  isArray: (input: Ast) => boolean,
+): void {
   const fn = enclosingFunction(node);
 
   if (!fn) return;
@@ -39,7 +43,7 @@ function checkReducerCopy(context: Context, node: ESTree.CallExpression): void {
 
   const path = referencePath(context, node.callee);
   const initial = call.arguments[1];
-  const arrayAccumulator = (initial && isArray(context, initial)) || isArray(context, accumulator);
+  const arrayAccumulator = (initial && isArray(initial)) || isArray(accumulator);
   let copies = false;
 
   if (path === "Object.assign" && node.arguments[0]?.type === "ObjectExpression") {
@@ -77,6 +81,8 @@ export default defineRule({
     },
   },
   create(context) {
-    return { CallExpression: (node) => checkReducerCopy(context, node) };
+    const isArray = createArrayAnalysis(context);
+
+    return { CallExpression: (node) => checkReducerCopy(context, node, isArray) };
   },
 });

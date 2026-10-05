@@ -13,11 +13,23 @@ for (const [name, cases] of Object.entries({
       "const x = value as User;",
       "const x = [1] as const;",
       "const x = (1 as const) as const;",
+      "const x = (1 as const)! as const;",
+      "const x = ((1 as const) satisfies number) as const;",
+      "wrap(value as unknown) as User;",
+      "(value as unknown)?.field as User;",
+      "(value as unknown).field as User;",
     ],
     invalid: [
       { code: "const x = value as unknown as User;", errors: 1 },
       { code: "const x = ((value as object)) as User;", errors: 1 },
       { code: "const x = <User><unknown>value;", errors: 1 },
+      { code: "(value as unknown)! as User;", errors: 1 },
+      { code: "((value as unknown) satisfies unknown) as User;", errors: 1 },
+      { code: "(value as unknown as object)! as User;", errors: 1 },
+      { code: "((value as unknown)! as object)! as User;", errors: 1 },
+      { code: "(<unknown>value)! as User;", errors: 1 },
+      { code: "(value?.field as unknown)! as User;", errors: 1 },
+      { code: "(value as const)! as User;", errors: 1 },
     ],
   },
   "no-conditional-empty-object-spread": {
@@ -152,6 +164,19 @@ for (const [name, cases] of Object.entries({
       "function run([values]: [...IteratorObject<number>[], number[]]) { return values.filter(test).map(convert); }",
       "function run({ ...values }: { value: number[] }) { return values.filter(test).map(convert); }",
       "type Array<T> = IteratorObject<T>; function run({ values }: { values: Array<number> }) { return values.filter(test).map(convert); }",
+      "type Values = number[]; function outer() { type Values = IteratorObject<number>; function run(values: Values) { return values.filter(test).map(convert); } }",
+      "type Values = Values; function run(values: Values) { return values.filter(test).map(convert); }",
+      "type A = B; type B = A; function run(values: A) { return values.filter(test).map(convert); }",
+      "type Props<T> = { values: T }; function run({ values }: Props<IteratorObject<number>>) { return values.filter(test).map(convert); }",
+      "const C = class Array<T> { run(values: Array<number>) { return values.filter(test).map(convert); } };",
+      "import type { Values } from './external'; function run(values: Values) { return values.filter(test).map(convert); }",
+      "import Array = Custom.Array; function run(values: Array<number>) { return values.filter(test).map(convert); }",
+      "function run<Array>(values: Array) { return values.filter(test).map(convert); }",
+      "type Identity<Array> = Array; function run(values: Identity<IteratorObject<number>>) { return values.filter(test).map(convert); }",
+      "type Values<T> = T; function run<T>(values: Values<T>) { return values.filter(test).map(convert); }",
+      "type Values = number[]; function run<Values>(values: Values) { return values.filter(test).map(convert); }",
+      "type Values = number[] | IteratorObject<number>; function run(values: Values) { return values.filter(test).map(convert); }",
+      "type Values = number[]; let values: Values = []; values = other; values.filter(test).map(convert);",
     ],
     invalid: [
       { code: "const values = [1, 2].filter(test).map(convert);", errors: 1 },
@@ -208,8 +233,68 @@ for (const [name, cases] of Object.entries({
         errors: 1,
       },
       { code: "Array(1, 2).filter(test).map(convert);", errors: 1 },
+      {
+        code: "type Values = number[]; function run(values: Values) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run(values: Values) { return values.filter(test).map(convert); } type Values = number[];",
+        errors: 1,
+      },
+      {
+        code: "type Values<T> = T[]; function run(values: Values<number>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "type Identity<T> = T; type Values<T = number> = ReadonlyArray<T>; function run(values: Identity<Values>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "type Values = readonly [number, number]; function run(values: Values) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "type Values = number[]; function run(values: Values) { type Values = IteratorObject<number>; return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "type Values = readonly number[]; function run({ values }: { values: Values }) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "type Props<T> = { values: T }; function run({ values }: Props<number[]>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "type Pair<T> = [T]; function run([values]: Pair<number[]>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "type Rows<T> = ReadonlyArray<T>; function run([values]: Rows<number[]>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "type Props<T> = { nested: [T] }; function run({ nested: [values] }: Props<number[]>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "type Array<T> = T[]; function run(values: Array<number>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
       { code: "globalThis.Array(1, 2).filter(test).map(convert);", errors: 1 },
+      {
+        code: "const Array = custom; function run(values: Array<number>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
       { code: "const A = Array; A(1, 2).filter(test).map(convert);", errors: 1 },
+      {
+        code: "type Values<T = number[]> = T; function run(values: Values) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "type Values = readonly Values[]; function run(values: Values) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
       { code: "var values; var values = []; values.filter(test).map(convert);", errors: 1 },
       {
         code: "function run(values: number[]) { return values.map(convert).filter(test); }",
@@ -254,6 +339,14 @@ for (const [name, cases] of Object.entries({
         errors: 1,
       },
       { code: "items.reduce((acc, item) => acc.concat(item), Array());", errors: 1 },
+      {
+        code: "type Values = number[]; function run(values: Values) { return items.reduce((acc, item) => acc.concat(item), values); }",
+        errors: 1,
+      },
+      {
+        code: "type Values = number[]; items.reduce((acc: Values, item) => acc.map(normalize));",
+        errors: 1,
+      },
       { code: "const A = Array; items.reduce((acc, item) => acc.slice(), A());", errors: 1 },
       { code: "items.reduce((acc, item) => Object.assign({}, acc, item), {});", errors: 1 },
       { code: "items.reduce((acc, item) => Array.from(acc), []);", errors: 1 },

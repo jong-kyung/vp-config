@@ -182,7 +182,7 @@ export function createTypeAnalysis(context: Context) {
     return false;
   }
 
-  function unsafeValue(input: TypeUse, seen = new Set<Ast>()): boolean {
+  function unsafeValue(input: TypeUse, includeAny = true, seen = new Set<Ast>()): boolean {
     const current = expand(input);
     const node = current.node;
 
@@ -191,11 +191,12 @@ export function createTypeAnalysis(context: Context) {
     if (node.type === "TSUnionType") {
       const next = new Set(seen).add(node);
 
-      return node.types.some((type) => unsafeValue(use(type, current.bindings), next));
+      return node.types.some((type) => unsafeValue(use(type, current.bindings), includeAny, next));
     }
 
     return (
-      ["TSUnknownKeyword", "TSAnyKeyword", "TSObjectKeyword"].includes(node.type) ||
+      ["TSUnknownKeyword", "TSObjectKeyword"].includes(node.type) ||
+      (includeAny && node.type === "TSAnyKeyword") ||
       (node.type === "TSTypeLiteral" && node.members.length === 0)
     );
   }
@@ -257,14 +258,7 @@ export function createTypeAnalysis(context: Context) {
 
   function wide(input: TypeUse, includeAny = false): boolean {
     return (
-      contains(
-        input,
-        includeAny
-          ? ["TSUnknownKeyword", "TSObjectKeyword", "TSAnyKeyword"]
-          : ["TSUnknownKeyword", "TSObjectKeyword"],
-      ) ||
-      input.node.type === "TSTypeLiteral" ||
-      openDictionary(input)
+      unsafeValue(input, includeAny) || input.node.type === "TSTypeLiteral" || openDictionary(input)
     );
   }
 
@@ -276,6 +270,68 @@ export function createTypeAnalysis(context: Context) {
     return "typeAnnotation" in node && node.typeAnnotation?.type === "TSTypeAnnotation"
       ? node.typeAnnotation.typeAnnotation
       : undefined;
+  }
+
+  /** ponytail: scan tuple prefixes per argument. Cache projections if large tuples become costly. */
+  function restElement(input: TypeUse, index: number, seen = new Set<Ast>()): TypeUse | undefined {
+    const current = expand(input, true);
+    const node = current.node;
+
+    if (seen.has(node)) return undefined;
+    const next = new Set(seen).add(node);
+
+    if (node.type === "TSNamedTupleMember") {
+      const element = node.elementType;
+
+      return restElement(
+        use(
+          element.type === "TSOptionalType" || element.type === "TSRestType"
+            ? element.typeAnnotation
+            : element,
+          current.bindings,
+        ),
+        index,
+        next,
+      );
+    }
+
+    if (node.type === "TSTypeOperator" && node.operator === "readonly")
+      return restElement(use(node.typeAnnotation, current.bindings), index, next);
+
+    if (node.type === "TSArrayType") return use(node.elementType, current.bindings);
+
+    if (
+      node.type === "TSTypeReference" &&
+      (standard(current, "Array") || standard(current, "ReadonlyArray"))
+    ) {
+      const element = node.typeArguments?.params[0];
+
+      return element && use(element, current.bindings);
+    }
+
+    if (node.type !== "TSTupleType") return undefined;
+
+    for (let position = 0; position <= index; position++) {
+      const member = node.elementTypes[position];
+      const element = member?.type === "TSNamedTupleMember" ? member.elementType : member;
+
+      if (!element) return undefined;
+
+      if (element.type === "TSRestType") {
+        /** ponytail: only trailing variadics. Model tuple arity before selecting later fields. */
+        return position === node.elementTypes.length - 1
+          ? restElement(use(element.typeAnnotation, current.bindings), index - position, next)
+          : undefined;
+      }
+
+      if (position === index)
+        return use(
+          element.type === "TSOptionalType" ? element.typeAnnotation : element,
+          current.bindings,
+        );
+    }
+
+    return undefined;
   }
 
   function functionValue(node: Ast): FunctionNode | undefined {
@@ -452,5 +508,6 @@ export function createTypeAnalysis(context: Context) {
     widened,
     functionValue,
     callBindings,
+    restElement,
   };
 }

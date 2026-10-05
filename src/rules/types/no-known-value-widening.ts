@@ -64,12 +64,24 @@ export default defineRule({
         const offset = first?.type === "Identifier" && first.name === "this" ? 1 : 0;
         const bindings = types.callBindings(node, fn);
 
-        for (const [index, argument] of node.arguments.entries()) {
+        let parameterIndex = offset;
+        let restIndex = 0;
+
+        for (const argument of node.arguments) {
           /** ponytail: stop at spreads. Add tuple-arity analysis to check later arguments. */
           if (argument.type === "SpreadElement") break;
-          const parameter = fn.params[index + offset];
+          const parameter = fn.params[parameterIndex];
 
-          if (parameter) check(types.annotation(parameter), argument, argument, bindings);
+          if (!parameter) break;
+          const annotation = types.annotation(parameter);
+          let type = annotation && types.use(annotation, bindings);
+
+          if (parameter.type === "RestElement") {
+            if (type) type = types.restElement(type, restIndex);
+            restIndex++;
+          } else parameterIndex++;
+
+          if (type) check(type.node, argument, argument, type.bindings);
         }
       },
       TSAsExpression: checkAssertion,

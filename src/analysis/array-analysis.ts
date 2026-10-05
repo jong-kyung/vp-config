@@ -67,17 +67,14 @@ export function createArrayAnalysis(context: Context) {
       parent.value === node &&
       parent.parent.type === "ObjectPattern"
     ) {
-      if (parent.computed && parent.key.type !== "Literal") return undefined;
-      const name = propertyName(parent.key);
+      const name = propertyName(parent.key, parent.computed);
       const type = arrayType(bindingAnnotation(parent.parent));
 
       if (name === undefined || type?.node.type !== "TSTypeLiteral") return undefined;
 
       const member = type.node.members.find(
         (item) =>
-          item.type === "TSPropertySignature" &&
-          (!item.computed || item.key.type === "Literal") &&
-          propertyName(item.key) === name,
+          item.type === "TSPropertySignature" && propertyName(item.key, item.computed) === name,
       );
 
       return member?.type === "TSPropertySignature" && member.typeAnnotation
@@ -163,6 +160,11 @@ export function createArrayAnalysis(context: Context) {
         "map",
         "slice",
         "concat",
+        "sort",
+        "reverse",
+        "fill",
+        "copyWithin",
+        "splice",
         "flat",
         "flatMap",
         "toSorted",

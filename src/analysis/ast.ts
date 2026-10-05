@@ -45,20 +45,20 @@ export function isOptionsObject(value: Options[number]): value is Record<string,
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-export function propertyName(node: Ast): string | undefined {
-  if (node.type === "Identifier" || node.type === "PrivateIdentifier") return node.name;
+export function propertyName(node: Ast, computed = false): string | undefined {
+  if (!computed && (node.type === "Identifier" || node.type === "PrivateIdentifier"))
+    return node.name;
 
   if (node.type === "Literal" && isString(node.value)) return node.value;
+
+  if (node.type === "TemplateLiteral" && node.expressions.length === 0)
+    return node.quasis[0]?.value.cooked ?? undefined;
 
   return undefined;
 }
 
 export function memberName(node: Ast): string | undefined {
-  if (node.type !== "MemberExpression") return undefined;
-
-  if (node.computed && node.property.type !== "Literal") return undefined;
-
-  return propertyName(node.property);
+  return node.type === "MemberExpression" ? propertyName(node.property, node.computed) : undefined;
 }
 
 export function binding(context: Context, node: Ast): Variable | undefined {
@@ -170,9 +170,8 @@ export function referencePath(
 
       if (target.type !== "Identifier" || target.name !== node.name) continue;
 
-      if (property.computed && property.key.type !== "Literal") continue;
       const object = referencePath(context, decl.init, seen);
-      const key = propertyName(property.key);
+      const key = propertyName(property.key, property.computed);
 
       if (object && key) return `${object}.${key}`;
     }

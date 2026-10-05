@@ -51,9 +51,11 @@ export default defineRule({
         const fn = types.functionValue(node.callee);
 
         if (!fn) return;
+        const first = fn.params[0];
+        const offset = first?.type === "Identifier" && first.name === "this" ? 1 : 0;
 
         for (const [index, argument] of node.arguments.entries()) {
-          const parameter = fn.params[index];
+          const parameter = fn.params[index + offset];
 
           if (parameter && argument.type !== "SpreadElement")
             check(types.annotation(parameter), argument, argument);

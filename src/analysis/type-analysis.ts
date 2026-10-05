@@ -10,7 +10,7 @@ import {
 } from "./ast.ts";
 import type { Ast, FunctionNode } from "./ast.ts";
 
-interface TypeUse {
+export interface TypeUse {
   node: ESTree.TSType;
   bindings: ReadonlyMap<string, TypeUse>;
 }
@@ -55,6 +55,8 @@ export function createTypeAnalysis(context: Context) {
           node.type === "ImportNamespaceSpecifier"
         ) {
           declare(node, node.local.name, null);
+        } else if (node.type === "TSImportEqualsDeclaration") {
+          declare(node, node.id.name, null);
         }
       });
       indexed = true;
@@ -359,6 +361,9 @@ export function createTypeAnalysis(context: Context) {
       return !!type && knownType(use(type));
     }
 
+    if (node.type === "ConditionalExpression")
+      return known(node.consequent, seen) && known(node.alternate, seen);
+
     if (node.type === "UnaryExpression") return node.operator !== "void";
 
     if (node.type === "BinaryExpression")
@@ -410,6 +415,7 @@ export function createTypeAnalysis(context: Context) {
   return {
     use,
     expand,
+    standard,
     contains,
     unsafeValue,
     unsafeDictionary,

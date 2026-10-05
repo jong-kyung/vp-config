@@ -37,6 +37,21 @@ export function createArrayAnalysis(context: Context) {
     );
   }
 
+  function isArrayType(input: TypeUse, seen?: ReadonlySet<Ast>): boolean {
+    const current = arrayType(input);
+
+    if (!current || seen?.has(current.node)) return false;
+    const node = current.node;
+
+    if (node.type === "TSUnionType") {
+      const next = new Set(seen).add(node);
+
+      return node.types.every((type) => isArrayType(types.use(type, current.bindings), next));
+    }
+
+    return node.type === "TSArrayType" || node.type === "TSTupleType" || isArrayReference(current);
+  }
+
   /** Preserve generic bindings while projecting pattern annotations onto their members. */
   function bindingAnnotation(node: Ast): TypeUse | undefined {
     const annotation = types.annotation(node);
@@ -123,15 +138,9 @@ export function createArrayAnalysis(context: Context) {
           identifier.parent.parent.type === "ArrayPattern"
         )
           return true;
-        const annotation = arrayType(bindingAnnotation(identifier));
+        const annotation = bindingAnnotation(identifier);
 
-        if (
-          annotation &&
-          (annotation.node.type === "TSArrayType" ||
-            annotation.node.type === "TSTupleType" ||
-            isArrayReference(annotation))
-        )
-          return true;
+        if (annotation && isArrayType(annotation)) return true;
       }
 
       const decl = declaration(context, node);

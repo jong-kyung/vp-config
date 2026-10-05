@@ -176,6 +176,12 @@ for (const [name, cases] of Object.entries({
       "import type { Readonly } from './custom'; function run(values: Readonly<number[]>) { return values.filter(test).map(convert); }",
       "function run<Readonly>(values: Readonly) { return values.filter(test).map(convert); }",
       "type Values = Readonly<Values>; function run(values: Values) { return values.filter(test).map(convert); }",
+      "function run(values: number[] | IteratorObject<number>) { return values.filter(test).map(convert); }",
+      "function run(values: number[] | unknown) { return values.filter(test).map(convert); }",
+      "function run(values: number[] | any) { return values.filter(test).map(convert); }",
+      "type Loop = number[] | Loop; function run(values: Loop) { return values.filter(test).map(convert); }",
+      "type Array<T> = IteratorObject<T>; function run(values: number[] | Array<number>) { return values.filter(test).map(convert); }",
+      "function run<T>(values: number[] | T) { return values.filter(test).map(convert); }",
       "type Loop<T = Readonly<T>> = T; function run(values: Loop) { return values.filter(test).map(convert); }",
       "type Loop<T> = Readonly<Loop<T>>; function run(values: Loop<number[]>) { return values.filter(test).map(convert); }",
       "function run(values: Readonly<{ filter: Function; map: Function }>) { return values.filter(test).map(convert); }",
@@ -240,6 +246,38 @@ for (const [name, cases] of Object.entries({
         errors: 1,
       },
       { code: "Array(1, 2).filter(test).map(convert);", errors: 1 },
+      {
+        code: "function run(values: number[] | readonly number[]) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "type Values<T> = T[] | ReadonlyArray<T>; function run(values: Values<number>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run(values: [number] | readonly [number, number]) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run(values: Readonly<number[] | [number]>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "type Values = number[]; function run(values: Values | Readonly<Values>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run({ values }: { values: number[] | readonly number[] }) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run([values]: [number[] | readonly number[]]) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run(values: number[] | readonly number[]) { const alias = values; return alias.filter(test).map(convert); }",
+        errors: 1,
+      },
       {
         code: "function run(values: Readonly<number[]>) { return values.filter(test).map(convert); }",
         errors: 1,
@@ -355,6 +393,7 @@ for (const [name, cases] of Object.entries({
     valid: [
       "items.reduce((acc, item) => { acc.push(item); return acc; }, []);",
       "items.reduce((acc, item) => Object.assign(acc, item), {});",
+      "function run(values: number[] | IteratorObject<number>) { return items.reduce((acc, item) => acc.map(convert), values); }",
       "items.reduce((acc, item) => Object.assign(acc as Result, item), {});",
       "items.reduce((acc, item) => Object.assign(target as Result, acc, item), {});",
       "function run(Object) { return items.reduce((acc, item) => Object.assign({} as Result, acc, item), {}); }",
@@ -396,6 +435,14 @@ for (const [name, cases] of Object.entries({
       },
       { code: "const A = Array; items.reduce((acc, item) => acc.slice(), A());", errors: 1 },
       { code: "items.reduce((acc, item) => Object.assign({}, acc, item), {});", errors: 1 },
+      {
+        code: "function run(values: number[] | readonly number[]) { return items.reduce((acc, item) => acc.concat(item), values); }",
+        errors: 1,
+      },
+      {
+        code: "items.reduce((acc: number[] | readonly number[], item) => acc.slice());",
+        errors: 1,
+      },
       {
         code: "items.reduce((acc, item) => Object.assign({} as Result, acc, item), {});",
         errors: 1,

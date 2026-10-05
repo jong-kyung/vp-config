@@ -91,9 +91,9 @@ Only the custom spacing and JSDoc rules offer autofixes. Spacing fixes preserve 
 
 ### Analysis boundaries
 
-The custom rules use the Vite+ AST and lexical scope APIs, not the TypeScript type checker. Local type analysis follows aliases, transparent generic arguments, unions, and selected built-in wrappers. It handles shadowing and cycles. It does not resolve imported aliases, interface inheritance, arbitrary conditional types, indexed-access types, or full control-flow narrowing. Call analysis applies explicit type arguments, skips overloaded bindings, and stops matching arguments after a spread.
+The custom rules use the Vite+ AST and lexical scope APIs, not the TypeScript type checker. Local type analysis follows aliases, transparent generic arguments, unions, and selected built-in wrappers. It handles shadowing and cycles. It does not resolve imported aliases, interface inheritance, arbitrary conditional types, indexed-access types, or full control-flow narrowing. Call analysis applies explicit type arguments and checks rest arguments against array elements or supported tuple positions. It skips overloaded bindings and stops matching arguments after a spread or at a non-trailing variadic tuple segment.
 
-Array detection recognizes array literals, array and tuple annotations, local type aliases, unchanged value aliases, standard `Readonly` wrappers, and selected standard array-producing calls. It leaves unknown receivers and iterator helpers alone. Copy checks inspect inline reducer callbacks. Reflection and mocking checks follow lexical aliases, not arbitrary runtime mutations of objects or cross-file exports.
+Array detection recognizes array literals, array and tuple annotations, local type aliases, unchanged value aliases, standard `Readonly` wrappers, unions whose members are all array-shaped, and selected standard array-producing calls. It leaves unknown receivers and iterator helpers alone. Copy checks inspect inline reducer callbacks. Reflection and mocking checks follow lexical aliases, not arbitrary runtime mutations of objects or cross-file exports.
 
 Rules inspect the whole selected file. Staging selects files rather than restricting diagnostics to changed lines. `no-em-dash` covers source accepted by the linter, not Markdown documents or arbitrary assets.
 

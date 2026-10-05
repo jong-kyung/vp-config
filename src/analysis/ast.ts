@@ -202,6 +202,85 @@ export function enclosingFunction(node: Ast): FunctionNode | undefined {
   return undefined;
 }
 
+function unwrapArrayType(type: ESTree.TSType | undefined): ESTree.TSType | undefined {
+  while (
+    type?.type === "TSParenthesizedType" ||
+    (type?.type === "TSTypeOperator" && type.operator === "readonly")
+  ) {
+    type = type.typeAnnotation;
+  }
+
+  return type;
+}
+
+function isArrayReference(context: Context, type: ESTree.TSType): type is ESTree.TSTypeReference {
+  return (
+    type.type === "TSTypeReference" &&
+    type.typeName.type === "Identifier" &&
+    ["Array", "ReadonlyArray"].includes(type.typeName.name) &&
+    !binding(context, type.typeName)?.defs.length
+  );
+}
+
+/** Project inline pattern annotations without inferring imported or computed property types. */
+function bindingAnnotation(context: Context, node: Ast): ESTree.TSType | undefined {
+  if ("typeAnnotation" in node && node.typeAnnotation?.type === "TSTypeAnnotation")
+    return node.typeAnnotation.typeAnnotation;
+  const parent = node.parent;
+
+  if (parent?.type === "AssignmentPattern" && parent.left === node)
+    return bindingAnnotation(context, parent);
+
+  if (
+    parent?.type === "Property" &&
+    parent.value === node &&
+    parent.parent.type === "ObjectPattern"
+  ) {
+    if (parent.computed && parent.key.type !== "Literal") return undefined;
+    const name = propertyName(parent.key);
+    const type = unwrapArrayType(bindingAnnotation(context, parent.parent));
+
+    if (name === undefined || type?.type !== "TSTypeLiteral") return undefined;
+
+    const member = type.members.find(
+      (item) =>
+        item.type === "TSPropertySignature" &&
+        (!item.computed || item.key.type === "Literal") &&
+        propertyName(item.key) === name,
+    );
+
+    return member?.type === "TSPropertySignature"
+      ? member.typeAnnotation?.typeAnnotation
+      : undefined;
+  }
+
+  if (parent?.type === "ArrayPattern") {
+    const type = unwrapArrayType(bindingAnnotation(context, parent));
+
+    if (!type) return undefined;
+
+    if (type.type === "TSArrayType") return type.elementType;
+
+    if (isArrayReference(context, type)) return type.typeArguments?.params[0];
+
+    if (type.type !== "TSTupleType") return undefined;
+    const index = parent.elements.findIndex((element) => element === node);
+
+    for (let position = 0; position <= index; position++) {
+      const item = type.elementTypes[position];
+      const element = item?.type === "TSNamedTupleMember" ? item.elementType : item;
+
+      /** A variadic segment makes subsequent positional selections ambiguous. */
+      if (element?.type === "TSRestType") return undefined;
+
+      if (position === index)
+        return element?.type === "TSOptionalType" ? element.typeAnnotation : element;
+    }
+  }
+
+  return undefined;
+}
+
 export function isArray(context: Context, input: Ast, seen = new Set<Variable>()): boolean {
   const node = unwrap(input);
 
@@ -215,31 +294,23 @@ export function isArray(context: Context, input: Ast, seen = new Set<Variable>()
 
     if (hasReassignment(variable)) return false;
 
-    const identifier = variable.identifiers.find(
-      (id) => id.type === "Identifier" && id.typeAnnotation,
-    );
+    for (const identifier of variable.identifiers) {
+      if (
+        identifier.parent?.type === "RestElement" &&
+        identifier.parent.parent.type === "ArrayPattern"
+      )
+        return true;
+      const annotation = unwrapArrayType(bindingAnnotation(context, identifier));
 
-    let annotation =
-      identifier && "typeAnnotation" in identifier
-        ? identifier.typeAnnotation?.typeAnnotation
-        : undefined;
-
-    while (
-      annotation?.type === "TSParenthesizedType" ||
-      (annotation?.type === "TSTypeOperator" && annotation.operator === "readonly")
-    ) {
-      annotation = annotation.typeAnnotation;
+      if (
+        annotation &&
+        (annotation.type === "TSArrayType" ||
+          annotation.type === "TSTupleType" ||
+          isArrayReference(context, annotation))
+      )
+        return true;
     }
 
-    if (annotation?.type === "TSArrayType" || annotation?.type === "TSTupleType") return true;
-
-    if (
-      annotation?.type === "TSTypeReference" &&
-      annotation.typeName.type === "Identifier" &&
-      ["Array", "ReadonlyArray"].includes(annotation.typeName.name) &&
-      !binding(context, annotation.typeName)?.defs.length
-    )
-      return true;
     const decl = declaration(context, node);
 
     return !!decl?.init && decl.id.type === "Identifier" && isArray(context, decl.init, seen);

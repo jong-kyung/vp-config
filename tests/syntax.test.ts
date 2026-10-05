@@ -143,9 +143,70 @@ for (const [name, cases] of Object.entries({
       "var A = Array; var A = custom; A().filter(test).map(convert);",
       "const values = list.filter(test);",
       "let values = []; values = iterator; values.filter(test).map(convert);",
+      "function run({ values }) { return values.filter(test).map(convert); }",
+      "function run({ [key]: values }: { values: number[] }) { return values.filter(test).map(convert); }",
+      "function run({ values }: { values: IteratorObject<number> }) { return values.filter(test).map(convert); }",
+      "function run({ nested: { values } }: { nested: { values: IteratorObject<number> }; values: number[] }) { return values.filter(test).map(convert); }",
+      "function run({ values }: { values: number[] }) { values = other; return values.filter(test).map(convert); }",
+      "function run([values]: [IteratorObject<number>]) { return values.filter(test).map(convert); }",
+      "function run([values]: [...IteratorObject<number>[], number[]]) { return values.filter(test).map(convert); }",
+      "function run({ ...values }: { value: number[] }) { return values.filter(test).map(convert); }",
+      "type Array<T> = IteratorObject<T>; function run({ values }: { values: Array<number> }) { return values.filter(test).map(convert); }",
     ],
     invalid: [
       { code: "const values = [1, 2].filter(test).map(convert);", errors: 1 },
+      {
+        code: "function run({ values }: { values: number[] }) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run({ values: items }: { values: number[] }) { return items.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run({ values = [] }: { values?: number[] }) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run({ values }: { values: number[] } = { values: [] }) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run({ nested: { values } }: { nested: { values: readonly number[] } }) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run({ ['values']: items }: { values: ReadonlyArray<number> }) { return items.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "const { values }: { values: number[] } = data; values.filter(test).map(convert);",
+        errors: 1,
+      },
+      {
+        code: "function run([values]: [number[]]) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run([, values]: readonly [string, values: number[]]) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run([values]: number[][]) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run([values]: ReadonlyArray<number[]>) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run({ items: [values] }: { items: [number[]] }) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
+      {
+        code: "function run([, ...values]: number[]) { return values.filter(test).map(convert); }",
+        errors: 1,
+      },
       { code: "Array(1, 2).filter(test).map(convert);", errors: 1 },
       { code: "globalThis.Array(1, 2).filter(test).map(convert);", errors: 1 },
       { code: "const A = Array; A(1, 2).filter(test).map(convert);", errors: 1 },
@@ -173,9 +234,25 @@ for (const [name, cases] of Object.entries({
       "items.reduce(wrap((acc, item) => acc.concat(item)), []);",
       "items.reduce((acc, item) => { function inner(acc) { return acc.concat(item); } return acc; }, []);",
       "items.reduce(((acc, item) => acc.concat(item)) as Reducer, '');",
+      "items.reduce((acc, item) => acc.map(normalize), custom);",
+      "items.reduce((acc, item) => item.map(normalize), []);",
+      "items.reduce((acc, item) => { function inner(acc) { return acc.map(normalize); } return acc; }, []);",
+      "items.reduce((acc, item) => { let alias = acc; alias = other; return alias.map(normalize); }, []);",
     ],
     invalid: [
       { code: "items.reduce((acc, item) => acc.concat(item), []);", errors: 1 },
+      ...["map(normalize)", "filter(test)", "flat()", "flatMap(normalize)"].flatMap((method) => [
+        { code: `items.reduce((acc, item) => acc.${method}, []);`, errors: 1 },
+        { code: `items.reduce((acc, item) => acc.${method}.concat(item), []);`, errors: 1 },
+      ]),
+      {
+        code: "items.reduceRight((acc, item) => { const alias = acc; return alias.map(normalize); }, []);",
+        errors: 1,
+      },
+      {
+        code: "function run({ values }: { values: number[] }) { return items.reduce((acc, item) => acc.concat(item), values); }",
+        errors: 1,
+      },
       { code: "items.reduce((acc, item) => acc.concat(item), Array());", errors: 1 },
       { code: "const A = Array; items.reduce((acc, item) => acc.slice(), A());", errors: 1 },
       { code: "items.reduce((acc, item) => Object.assign({}, acc, item), {});", errors: 1 },

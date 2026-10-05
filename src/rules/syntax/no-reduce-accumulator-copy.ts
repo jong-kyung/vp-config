@@ -51,9 +51,18 @@ function checkReducerCopy(context: Context, node: ESTree.CallExpression): void {
     copies =
       !!arrayAccumulator &&
       callee.type === "MemberExpression" &&
-      ["concat", "slice", "toSorted", "toReversed", "toSpliced", "with"].includes(
-        memberName(callee) ?? "",
-      ) &&
+      [
+        "concat",
+        "slice",
+        "map",
+        "filter",
+        "flat",
+        "flatMap",
+        "toSorted",
+        "toReversed",
+        "toSpliced",
+        "with",
+      ].includes(memberName(callee) ?? "") &&
       isAccumulator(callee.object);
   }
 

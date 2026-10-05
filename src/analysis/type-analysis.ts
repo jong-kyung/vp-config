@@ -1,5 +1,13 @@
 import type { Context, ESTree, Variable } from "vite-plus/lint/plugins";
-import { binding, declaration, isFunction, resolveValue, unwrap, walk } from "./ast.ts";
+import {
+  binding,
+  declaration,
+  isFunction,
+  isTransparentWrapper,
+  resolveValue,
+  unwrap,
+  walk,
+} from "./ast.ts";
 import type { Ast, FunctionNode } from "./ast.ts";
 
 interface TypeUse {
@@ -264,11 +272,17 @@ export function createTypeAnalysis(context: Context) {
     if (isFunction(value)) return value;
     const variable = binding(context, value);
 
+    let fn: FunctionNode | undefined;
+
     for (const definition of variable?.defs ?? []) {
-      if (isFunction(definition.node)) return definition.node;
+      if (!isFunction(definition.node)) continue;
+
+      /** Overload selection requires argument type information unavailable to this analysis. */
+      if (fn) return undefined;
+      fn = definition.node;
     }
 
-    return undefined;
+    return fn;
   }
 
   function knownType(input: TypeUse, seen = new Set<Ast>()): boolean {
@@ -294,15 +308,16 @@ export function createTypeAnalysis(context: Context) {
     );
   }
 
-  function known(input: Ast, seen = new Set<Variable>()): boolean {
-    if (input.type === "ParenthesizedExpression") return known(input.expression, seen);
+  function known(node: Ast, seen = new Set<Variable>()): boolean {
+    if (isTransparentWrapper(node)) {
+      if (
+        (node.type === "TSAsExpression" || node.type === "TSTypeAssertion") &&
+        contains(use(node.typeAnnotation), ["TSUnknownKeyword", "TSAnyKeyword", "TSObjectKeyword"])
+      )
+        return false;
 
-    if (
-      (input.type === "TSAsExpression" || input.type === "TSTypeAssertion") &&
-      contains(use(input.typeAnnotation), ["TSUnknownKeyword", "TSAnyKeyword", "TSObjectKeyword"])
-    )
-      return false;
-    const node = unwrap(input);
+      return known(node.expression, seen);
+    }
 
     if (
       [
@@ -313,6 +328,7 @@ export function createTypeAnalysis(context: Context) {
         "FunctionExpression",
         "ArrowFunctionExpression",
         "ClassExpression",
+        "NewExpression",
       ].includes(node.type)
     )
       return true;
@@ -378,14 +394,15 @@ export function createTypeAnalysis(context: Context) {
     if (type && wide(type, true) && known(decl.init)) return true;
     let initializer: Ast = decl.init;
 
-    while (initializer.type === "ParenthesizedExpression") initializer = initializer.expression;
-
-    if (
-      (initializer.type === "TSAsExpression" || initializer.type === "TSTypeAssertion") &&
-      wide(initializer.typeAnnotation, true) &&
-      known(initializer.expression)
-    )
-      return true;
+    while (isTransparentWrapper(initializer)) {
+      if (
+        (initializer.type === "TSAsExpression" || initializer.type === "TSTypeAssertion") &&
+        wide(initializer.typeAnnotation, true) &&
+        known(initializer.expression)
+      )
+        return true;
+      initializer = initializer.expression;
+    }
 
     return widened(initializer, next);
   }

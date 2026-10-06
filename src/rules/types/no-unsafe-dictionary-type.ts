@@ -35,8 +35,8 @@ export default defineRule({
 
       const unsafe =
         node.type === "TSIndexSignature"
-          ? types.unsafeValue(types.use(node.typeAnnotation.typeAnnotation))
-          : types.unsafeDictionary(types.use(node));
+          ? types.unsafeValue(node.typeAnnotation.typeAnnotation)
+          : types.unsafeDictionary(node);
 
       if (unsafe) context.report({ node, messageId: "avoid" });
     }

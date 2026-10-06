@@ -91,9 +91,13 @@ Only the custom spacing and JSDoc rules offer autofixes. Spacing fixes preserve 
 
 ### Analysis boundaries
 
-The custom rules use the Vite+ AST and lexical scope APIs, not the TypeScript type checker. Local type analysis follows aliases, transparent generic arguments, unions, and selected built-in wrappers. It handles shadowing and cycles. It does not resolve imported aliases, interface inheritance, arbitrary conditional types, indexed-access types, or full control-flow narrowing. Call analysis prioritizes explicit function-type annotations, applies explicit type arguments, and checks rest arguments against array elements or supported tuple positions. Call analysis skips overloaded bindings and stops matching arguments after a spread or at a non-trailing variadic tuple segment. Generic alias declarations are checked using their parameter defaults. Unsupported type computations are not treated as proof of known information.
+The custom rules are syntax checks, not a partial TypeScript type checker. They inspect direct annotations, ordinary local type aliases, and explicit built-in forms such as `Promise<unknown>` and `Record<string, unknown>`. Name shadowing and alias cycles are handled. Known-value checks use literals, value creation, direct concrete annotations, and simple local value aliases.
 
-Array detection recognizes array literals, array and tuple annotations, local type aliases, unchanged value aliases, standard `Readonly` wrappers, unions whose members are all array-shaped, and selected standard array-producing calls. It leaves unknown receivers and iterator helpers alone. Copy checks inspect inline reducer callbacks. Reflection and mocking checks follow lexical aliases and static property names, including template literals without substitutions, but not arbitrary runtime mutations of objects or cross-file exports.
+Array checks recognize literals, direct array and tuple annotations, ordinary local aliases, and standard array-producing calls. Copy checks inspect inline reducer callbacks. Reflection and mocking checks follow lexical aliases and static property names, not runtime property mutations or cross-file exports.
+
+Generic argument substitution and defaults, call-site parameter and return contracts, type projection through destructuring and tuple elements, array unions, utility-type evaluation such as `Readonly<T>`, expression-result inference, and control-flow analysis are deliberately out of scope. Unsupported forms are skipped rather than guessed. Missing coverage in these forms is not a bug to patch case by case. Expanding this scope requires an explicit support decision.
+
+Reviews should prioritize incorrect diagnostics within the supported scope, unsafe autofixes, and broken configuration or packaging. License comments, suppression directives, and assertion SAFETY comments remain protected.
 
 Rules inspect the whole selected file. Staging selects files rather than restricting diagnostics to changed lines. `no-em-dash` covers source accepted by the linter, not Markdown documents or arbitrary assets.
 

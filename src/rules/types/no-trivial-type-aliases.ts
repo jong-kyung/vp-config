@@ -20,7 +20,7 @@ export default defineRule({
           node.parent.type === "ExportNamedDeclaration" ? node.parent.parent : node.parent;
 
         if (parent.type !== "Program") return;
-        const type = types.expand(types.use(node.typeAnnotation)).node;
+        const type = types.expand(node.typeAnnotation);
 
         if (
           [

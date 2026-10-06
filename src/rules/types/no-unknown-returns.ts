@@ -14,7 +14,7 @@ export default defineRule({
     function check(node: Signature) {
       const type = node.returnType?.typeAnnotation;
 
-      if (type && types.contains(types.use(type), ["TSUnknownKeyword"], true))
+      if (type && types.contains(type, ["TSUnknownKeyword"], true))
         context.report({ node: type, messageId: "avoid" });
     }
 

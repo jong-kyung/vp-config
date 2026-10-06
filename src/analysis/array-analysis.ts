@@ -1,119 +1,30 @@
-import type { Context, Variable } from "vite-plus/lint/plugins";
-import {
-  binding,
-  declaration,
-  hasReassignment,
-  memberName,
-  propertyName,
-  referencePath,
-  unwrap,
-} from "./ast.ts";
+import type { Context, ESTree, Variable } from "vite-plus/lint/plugins";
+import { binding, declaration, hasReassignment, memberName, referencePath, unwrap } from "./ast.ts";
 import type { Ast } from "./ast.ts";
 import { createTypeAnalysis } from "./type-analysis.ts";
-import type { TypeUse } from "./type-analysis.ts";
 
 export function createArrayAnalysis(context: Context) {
   const types = createTypeAnalysis(context);
 
-  function arrayType(input: TypeUse | undefined): TypeUse | undefined {
-    if (input && isArrayReference(input)) return input;
-    const current = input && types.expand(input, true);
+  function arrayType(input: ESTree.TSType): boolean {
+    /** Standard arrays need no local type-alias index. */
+    if (
+      input.type === "TSTypeReference" &&
+      input.typeName.type === "Identifier" &&
+      ["Array", "ReadonlyArray"].includes(input.typeName.name) &&
+      !binding(context, input.typeName)?.defs.length
+    )
+      return true;
+    let node = types.expand(input);
 
-    if (current?.node.type === "TSTypeOperator" && current.node.operator === "readonly")
-      return types.use(current.node.typeAnnotation, current.bindings);
-
-    return current;
-  }
-
-  function isArrayReference(type: TypeUse): boolean {
-    const node = type.node;
+    if (node.type === "TSTypeOperator" && node.operator === "readonly") node = node.typeAnnotation;
 
     return (
-      node.type === "TSTypeReference" &&
-      node.typeName.type === "Identifier" &&
-      ["Array", "ReadonlyArray"].includes(node.typeName.name) &&
-      !type.bindings.has(node.typeName.name) &&
-      (!binding(context, node.typeName)?.defs.length || types.standard(type, node.typeName.name))
+      node.type === "TSArrayType" ||
+      node.type === "TSTupleType" ||
+      types.standard(node, "Array") ||
+      types.standard(node, "ReadonlyArray")
     );
-  }
-
-  function isArrayType(input: TypeUse, seen?: ReadonlySet<Ast>): boolean {
-    const current = arrayType(input);
-
-    if (!current || seen?.has(current.node)) return false;
-    const node = current.node;
-
-    if (node.type === "TSUnionType") {
-      const next = new Set(seen).add(node);
-
-      return node.types.every((type) => isArrayType(types.use(type, current.bindings), next));
-    }
-
-    return node.type === "TSArrayType" || node.type === "TSTupleType" || isArrayReference(current);
-  }
-
-  /** Preserve generic bindings while projecting pattern annotations onto their members. */
-  function bindingAnnotation(node: Ast): TypeUse | undefined {
-    const annotation = types.annotation(node);
-
-    if (annotation) return types.use(annotation);
-    const parent = node.parent;
-
-    if (parent?.type === "AssignmentPattern" && parent.left === node)
-      return bindingAnnotation(parent);
-
-    if (
-      parent?.type === "Property" &&
-      parent.value === node &&
-      parent.parent.type === "ObjectPattern"
-    ) {
-      const name = propertyName(parent.key, parent.computed);
-      const type = arrayType(bindingAnnotation(parent.parent));
-
-      if (name === undefined || type?.node.type !== "TSTypeLiteral") return undefined;
-
-      const member = type.node.members.find(
-        (item) =>
-          item.type === "TSPropertySignature" && propertyName(item.key, item.computed) === name,
-      );
-
-      return member?.type === "TSPropertySignature" && member.typeAnnotation
-        ? types.use(member.typeAnnotation.typeAnnotation, type.bindings)
-        : undefined;
-    }
-
-    if (parent?.type === "ArrayPattern") {
-      const type = arrayType(bindingAnnotation(parent));
-
-      if (!type) return undefined;
-
-      if (type.node.type === "TSArrayType") return types.use(type.node.elementType, type.bindings);
-
-      if (isArrayReference(type) && type.node.type === "TSTypeReference") {
-        const element = type.node.typeArguments?.params[0];
-
-        return element && types.use(element, type.bindings);
-      }
-
-      if (type.node.type !== "TSTupleType") return undefined;
-      const index = parent.elements.findIndex((element) => element === node);
-
-      for (let position = 0; position <= index; position++) {
-        const item = type.node.elementTypes[position];
-        const element = item?.type === "TSNamedTupleMember" ? item.elementType : item;
-
-        /** A variadic segment makes subsequent positional selections ambiguous. */
-        if (element?.type === "TSRestType") return undefined;
-
-        if (position === index && element)
-          return types.use(
-            element.type === "TSOptionalType" ? element.typeAnnotation : element,
-            type.bindings,
-          );
-      }
-    }
-
-    return undefined;
   }
 
   function isArray(input: Ast, seen = new Set<Variable>()): boolean {
@@ -124,20 +35,13 @@ export function createArrayAnalysis(context: Context) {
     if (node.type === "Identifier") {
       const variable = binding(context, node);
 
-      if (!variable || seen.has(variable)) return false;
+      if (!variable || seen.has(variable) || hasReassignment(variable)) return false;
       seen.add(variable);
 
-      if (hasReassignment(variable)) return false;
-
       for (const identifier of variable.identifiers) {
-        if (
-          identifier.parent?.type === "RestElement" &&
-          identifier.parent.parent.type === "ArrayPattern"
-        )
-          return true;
-        const annotation = bindingAnnotation(identifier);
+        const type = types.annotation(identifier);
 
-        if (annotation && isArrayType(annotation)) return true;
+        if (type && arrayType(type)) return true;
       }
 
       const decl = declaration(context, node);

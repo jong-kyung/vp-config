@@ -29,7 +29,7 @@ export function parameterRule(kind: "TSUnknownKeyword" | "TSObjectKeyword"): Rul
           const target = parameterBinding(parameter);
           const type = types.annotation(parameter);
 
-          if (!type || !types.contains(types.use(type), [kind])) continue;
+          if (!type || !types.contains(type, [kind])) continue;
 
           if (kind === "TSUnknownKeyword" && target.type === "Identifier") {
             if (target.name === "cause") continue;

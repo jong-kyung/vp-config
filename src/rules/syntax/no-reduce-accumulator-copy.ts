@@ -32,7 +32,8 @@ function checkReducerCopy(
     !["reduce", "reduceRight"].includes(memberName(unwrap(call.callee)) ?? "")
   )
     return;
-  const accumulator = fn.params[0];
+  const first = fn.params[0];
+  const accumulator = first?.type === "AssignmentPattern" ? first.left : first;
 
   if (accumulator?.type !== "Identifier") return;
   const variable = binding(context, accumulator);

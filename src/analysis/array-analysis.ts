@@ -12,7 +12,7 @@ export function createArrayAnalysis(context: Context) {
       input.type === "TSTypeReference" &&
       input.typeName.type === "Identifier" &&
       ["Array", "ReadonlyArray"].includes(input.typeName.name) &&
-      !binding(context, input.typeName)?.defs.length
+      !binding(context, input.typeName, true)?.defs.length
     )
       return true;
     let node = types.expand(input);

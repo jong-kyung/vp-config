@@ -61,14 +61,25 @@ export function memberName(node: Ast): string | undefined {
   return node.type === "MemberExpression" ? propertyName(node.property, node.computed) : undefined;
 }
 
-export function binding(context: Context, node: Ast): Variable | undefined {
+export function binding(context: Context, node: Ast, includeTypes = false): Variable | undefined {
   if (node.type !== "Identifier") return undefined;
   let scope: Scope | null = context.sourceCode.getScope(node);
 
   while (scope) {
     const variable = scope.set.get(node.name);
 
-    if (variable) return variable;
+    if (
+      variable &&
+      (includeTypes ||
+        !variable.defs.length ||
+        variable.defs.some(
+          (definition) =>
+            !["TSTypeAliasDeclaration", "TSInterfaceDeclaration", "TSTypeParameter"].includes(
+              definition.node.type,
+            ),
+        ))
+    )
+      return variable;
     scope = scope.upper;
   }
 

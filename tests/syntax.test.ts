@@ -41,6 +41,7 @@ for (const [name, cases] of Object.entries({
     valid: [
       "const x = object.value;",
       "const Reflect = custom; Reflect.get(x, key);",
+      "const Reflect = custom; function run() { type Reflect = {}; Reflect.get(object, key); }",
       "const get = 'get'; Reflect[get](object, key);",
       "Reflect[`g${suffix}`](object, key);",
       "let read = Reflect.get; read = custom; read(object, key);",
@@ -48,6 +49,13 @@ for (const [name, cases] of Object.entries({
     ],
     invalid: [
       { code: "Reflect.get(object, key);", errors: 1 },
+      { code: "type Reflect = {}; Reflect.get(object, key);", errors: 1 },
+      { code: "interface Reflect {} Reflect.get(object, key);", errors: 1 },
+      { code: "function run<Reflect>() { Reflect.get(object, key); }", errors: 1 },
+      {
+        code: "const api = Reflect; function run() { type api = {}; api.get(object, key); }",
+        errors: 1,
+      },
       { code: "globalThis.Reflect['get'](object, key);", errors: 1 },
       { code: "Reflect[`get`](object, key);", errors: 1 },
       { code: "const reflect = Reflect; reflect.get(object, key);", errors: 1 },
@@ -58,6 +66,7 @@ for (const [name, cases] of Object.entries({
     valid: ["vi.fn();", "vi.spyOn(target, 'run');", "function test(vi) { vi.mock('x'); }"],
     invalid: [
       { code: "vi.mock('./service');", errors: 1 },
+      { code: "type vi = {}; vi.mock('./service');", errors: 1 },
       { code: "import { vi as v } from 'vitest'; v.doMock('./service');", errors: 1 },
       { code: "jest.unstable_mockModule('./service', factory);", errors: 1 },
       { code: "const { mock: replace } = vi; replace('./service');", errors: 1 },
@@ -152,6 +161,7 @@ for (const [name, cases] of Object.entries({
       },
       { code: "Array(1, 2).filter(test).map(convert);", errors: 1 },
       { code: "Array.from(source).filter(test).map(convert);", errors: 1 },
+      { code: "type Array = {}; Array.from(source).filter(test).map(convert);", errors: 1 },
       { code: "const values = [3, 1, 2]; values.sort().filter(test).map(convert);", errors: 1 },
       { code: "[1, 2][`filter`](test)[`map`](convert);", errors: 1 },
     ],
@@ -164,12 +174,15 @@ for (const [name, cases] of Object.entries({
       "items.reduce((acc, item) => item.slice(), []);",
       "items.reduce((acc, item) => acc.concat(item), '');",
       "items.reduce((acc, item) => { acc = item.bucket; return acc.concat(item); }, []);",
+      "items.reduce((acc: Item[] = [], item) => { acc = item.bucket; return acc.concat(item); }, []);",
       "items.reduce((acc, item) => { acc = item.bucket; return Object.assign({}, acc); }, {});",
       "function run(Array) { return items.reduce((acc, item) => acc.concat(item), Array()); }",
       "function run(Object) { return items.reduce((acc, item) => Object.assign({}, acc, item), {}); }",
     ],
     invalid: [
       { code: "items.reduce((acc, item) => acc.concat(item), []);", errors: 1 },
+      { code: "items.reduce((acc: Item[] = [], item) => acc.concat(item), []);", errors: 1 },
+      { code: "items.reduce((acc = {}, item) => Object.assign({}, acc, item), {});", errors: 1 },
       { code: "items.reduce((acc, item) => acc.slice(), []);", errors: 1 },
       { code: "items.reduce((acc, item) => acc.map(convert), []);", errors: 1 },
       { code: "items.reduce((acc, item) => Object.assign({}, acc, item), {});", errors: 1 },

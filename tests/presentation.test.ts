@@ -21,6 +21,7 @@ for (const [name, cases] of Object.entries({
       "const x = [1] as const;",
       "// SAFETY: The parser validated this identifier.\nexport const id = value as Id;",
       "const id = /* SAFETY: Validation ran at the boundary. */ value as Id;",
+      "function read() { /* SAFETY: The decoder checked this value. */ return raw as Value; }",
       "class C {\n  // SAFETY: The decoder checked this value.\n  value = raw as Value;\n}",
       "class C {\n  // SAFETY: The decoder checked this value.\n  accessor value = raw as Value;\n}",
       "class C {\n  // SAFETY: The decoder checked this value.\n  static #value = raw as Value;\n}",
@@ -49,6 +50,14 @@ for (const [name, cases] of Object.entries({
       },
       {
         code: "// SAFETY: This documents the function, not its implementation.\nfunction run() { return value as Id; }",
+        errors: 1,
+      },
+      {
+        code: "validate(raw); // SAFETY: raw was decoded\nconst id = unrelated as Id;",
+        errors: 1,
+      },
+      {
+        code: "const first = raw as Id // SAFETY: raw was decoded\nconst second = unrelated as Id;",
         errors: 1,
       },
       { code: "const id = <Id>value;", errors: 1 },

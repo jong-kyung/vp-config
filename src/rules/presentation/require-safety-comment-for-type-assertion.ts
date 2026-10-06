@@ -28,9 +28,22 @@ function checkSafety(
 ): void {
   if (isConstType(node.typeAnnotation)) return;
   const anchor = assertionAnchor(node);
+  const parent = anchor.parent;
+
+  const siblings =
+    parent?.type === "SwitchCase"
+      ? parent.consequent
+      : parent && "body" in parent && Array.isArray(parent.body)
+        ? parent.body
+        : [];
+
+  /** ponytail: scan siblings per assertion. Index predecessors if large files need it. */
+  const previous = siblings.findLast((sibling) => sibling.range[1] <= anchor.range[0]);
 
   const candidates = new Set([
-    ...attachedComments(context, anchor),
+    ...attachedComments(context, anchor).filter(
+      (comment) => !previous || comment.loc.start.line > previous.loc.end.line,
+    ),
     ...attachedComments(context, node),
   ]);
 

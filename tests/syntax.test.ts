@@ -76,6 +76,8 @@ for (const [name, cases] of Object.entries({
     valid: [
       "type T = typeof value;",
       "if (typeof window !== 'undefined') {}",
+      "if (typeof window !== `undefined`) {}",
+      "if (`undefined` === typeof window) {}",
       {
         code: "function isText(value: unknown): value is string { return typeof value === 'string'; }",
         options: [{ allowInTypeGuards: true }],
@@ -83,6 +85,9 @@ for (const [name, cases] of Object.entries({
     ],
     invalid: [
       { code: "if (typeof value === 'string') {}", errors: 1 },
+      { code: "if (typeof value === `string`) {}", errors: 1 },
+      { code: "if (typeof window !== undefined) {}", errors: 1 },
+      { code: "if (typeof window !== `un${part}`) {}", errors: 1 },
       {
         code: "function isText(value: unknown): value is string { return typeof value === 'string'; }",
         errors: 1,

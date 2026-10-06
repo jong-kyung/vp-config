@@ -1,5 +1,5 @@
 import { defineRule } from "vite-plus/lint/plugins";
-import { enclosingFunction, isOptionsObject, unwrap } from "../../analysis/ast.ts";
+import { enclosingFunction, isOptionsObject, propertyName, unwrap } from "../../analysis/ast.ts";
 import type { Ast } from "../../analysis/ast.ts";
 
 export default defineRule({
@@ -32,7 +32,7 @@ export default defineRule({
         ) {
           const other = unwrap(comparison.left === parent ? comparison.right : comparison.left);
 
-          if (other.type === "Literal" && other.value === "undefined") return;
+          if (propertyName(other, true) === "undefined") return;
         }
 
         const fn = enclosingFunction(node);

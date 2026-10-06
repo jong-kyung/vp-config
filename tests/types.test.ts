@@ -109,6 +109,7 @@ for (const [name, cases] of Object.entries({
       "function run(input: unknown) { const value: unknown = input; }",
       "const handlers = { start } satisfies Record<string, Handler>;",
       "const empty: Record<string, Handler> = {};",
+      "const empty = {}; const alias = empty; const handlers: Record<string, Handler> = alias;",
       "const handlers: Record<'start', Handler> = { start };",
       "type User = { name: string }; const user: User = { name: 'Kim' };",
       "function accept(value: unknown) {} accept(1);",
@@ -126,6 +127,10 @@ for (const [name, cases] of Object.entries({
       { code: "function run(): unknown { return 1; }", errors: 1 },
       { code: "const run = (): object => ({ name: 'Kim' });", errors: 1 },
       { code: "const handlers: Record<string, Handler> = { start };", errors: 1 },
+      {
+        code: "const known = { start }; const handlers: Record<string, Handler> = known;",
+        errors: 1,
+      },
       { code: "const value: { name: string } = { name: 'Kim' };", errors: 1 },
       { code: "const value: unknown = new Date();", errors: 1 },
       { code: "const value: unknown = (1 as unknown)!;", errors: 1 },

@@ -1,6 +1,6 @@
 import { defineRule } from "vite-plus/lint/plugins";
 import type { ESTree } from "vite-plus/lint/plugins";
-import { binding, enclosingFunction, isConstType, unwrap } from "../../analysis/ast.ts";
+import { binding, enclosingFunction, isConstType, resolveValue } from "../../analysis/ast.ts";
 import type { Ast } from "../../analysis/ast.ts";
 import { createTypeAnalysis } from "../../analysis/type-analysis.ts";
 
@@ -16,7 +16,7 @@ export default defineRule({
     const types = createTypeAnalysis(context);
     function check(type: ESTree.TSType | undefined, value: Ast | null | undefined, report: Ast) {
       if (!type || !value || !types.wide(type) || !types.known(value)) return;
-      const expression = unwrap(value);
+      const expression = resolveValue(context, value);
 
       if (
         types.openDictionary(type) &&

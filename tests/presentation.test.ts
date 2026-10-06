@@ -111,6 +111,9 @@ for (const [name, cases] of Object.entries({
       "// @ts-expect-error: Intentionally invalid input.\nconst value: number = '';",
       "// prettier-ignore\nconst value = { a: 1 };",
       "/* node:coverage ignore next */\nfunction unused() {}",
+      "/* global SDK */\nconst value = SDK;",
+      "/* globals SDK */\nconst value = SDK;",
+      "/* exported api */\nvar api = 1;",
       "// Do not embed */ in a generated block.\nconst value = 1;",
       "const object = {\n  // Property explanation.\n  value: 1,\n};",
       "// Detached heading.\n\nconst value = 1;",
@@ -118,6 +121,11 @@ for (const [name, cases] of Object.entries({
       "/// <amd-module name='example' />\nconst value = 1;",
     ],
     invalid: [
+      {
+        code: "// globalThis provides shared state.\nconst value = globalThis;",
+        output: "/** globalThis provides shared state. */\nconst value = globalThis;",
+        errors: 1,
+      },
       {
         code: "// See https://example.com\nconst value = 1;",
         output: "/** See https://example.com */\nconst value = 1;",

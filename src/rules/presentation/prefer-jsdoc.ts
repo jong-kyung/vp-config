@@ -23,7 +23,7 @@ function directiveComment(comment: ESTree.Comment): boolean {
 
   if (comment.type === "Block" && comment.value.startsWith("!")) return true;
 
-  return /(?:^|\n)\s*\*?\s*(?:eslint|oxlint|@ts-|prettier|istanbul|node:coverage\b|c8\b|v8\b|biome|deno-lint|[@#]__(?:PURE|NO_SIDE_EFFECTS)__|@vite-ignore|@license|@preserve|sourceMappingURL|sourceURL|webpack)/.test(
+  return /(?:^|\n)\s*\*?\s*(?:eslint|oxlint|globals?\b|exported\b|@ts-|prettier|istanbul|node:coverage\b|c8\b|v8\b|biome|deno-lint|[@#]__(?:PURE|NO_SIDE_EFFECTS)__|@vite-ignore|@license|@preserve|sourceMappingURL|sourceURL|webpack)/.test(
     comment.value,
   );
 }

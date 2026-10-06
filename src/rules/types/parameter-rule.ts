@@ -37,8 +37,9 @@ export function parameterRule(kind: "TSUnknownKeyword" | "TSObjectKeyword"): Rul
 
             if (
               predicate?.type === "TSTypePredicate" &&
-              predicate.parameterName.type === "Identifier" &&
-              predicate.parameterName.name === target.name
+              (predicate.parameterName.type === "TSThisType"
+                ? "this"
+                : predicate.parameterName.name) === target.name
             )
               continue;
           }

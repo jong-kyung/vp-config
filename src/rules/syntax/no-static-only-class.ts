@@ -28,6 +28,7 @@ function checkStaticClass(context: Context, node: ESTree.Class): void {
     if (
       member.type === "MethodDefinition" &&
       member.kind === "constructor" &&
+      member.accessibility !== "protected" &&
       member.value.params.length === 0 &&
       !member.value.body?.body.length
     )
@@ -46,6 +47,8 @@ export default defineRule({
     messages: { avoid: "Use module functions or values instead of a static-only class." },
   },
   create(context) {
+    if (/\.d\.[cm]?ts$/.test(context.filename)) return {};
+
     return {
       ClassDeclaration: (node) => checkStaticClass(context, node),
       ClassExpression: (node) => checkStaticClass(context, node),

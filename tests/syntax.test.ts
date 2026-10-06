@@ -96,9 +96,15 @@ for (const [name, cases] of Object.entries({
       "@decorate class User { static create() {} }",
       "declare namespace SDK { class Helpers { static run(): void; } }",
       'declare module "sdk" { export class Helpers { static run(): void; } }',
+      ...["types.d.ts", "types.d.mts", "types.d.cts"].map((filename) => ({
+        filename,
+        code: "export class Helpers { static run(): void; }",
+      })),
+      "class Base { protected constructor() {} static create() {} }",
     ],
     invalid: [
       { code: "class Utils { static run() {} }", errors: 1 },
+      { code: "class Utils { private constructor() {} static run() {} }", errors: 1 },
       { code: "namespace SDK { export class Helpers { static run() {} } }", errors: 1 },
       { code: "const Utils = class { static value = 1; };", errors: 1 },
     ],

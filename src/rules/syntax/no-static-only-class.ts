@@ -10,6 +10,11 @@ function checkStaticClass(context: Context, node: ESTree.Class): void {
     node.implements?.length
   )
     return;
+
+  for (let parent: ESTree.Node | null = node.parent; parent; parent = parent.parent) {
+    if (parent.type === "TSModuleDeclaration" && parent.declare) return;
+  }
+
   let count = 0;
 
   for (const member of node.body.body) {

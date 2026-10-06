@@ -3,6 +3,7 @@ import type { Context, ESTree } from "vite-plus/lint/plugins";
 import {
   binding,
   enclosingFunction,
+  hasReassignment,
   isTransparentWrapper,
   memberName,
   referencePath,
@@ -36,7 +37,7 @@ function checkReducerCopy(
   if (accumulator?.type !== "Identifier") return;
   const variable = binding(context, accumulator);
 
-  if (!variable) return;
+  if (!variable || hasReassignment(variable)) return;
 
   const isAccumulator = (value: Ast): boolean =>
     binding(context, resolveValue(context, value)) === variable;

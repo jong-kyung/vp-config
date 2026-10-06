@@ -49,10 +49,10 @@ function checkSpacing(context: Context, statements: readonly Ast[], topLevel: bo
     )
       continue;
 
-    const comments = attachedComments(context, current).filter(
-      (comment) => comment.loc.start.line > previous.loc.end.line,
-    );
+    const comments = attachedComments(context, current);
 
+    /** Preserve line-sensitive directives by leaving trailing comment boundaries alone. */
+    if (comments.some((comment) => comment.loc.start.line <= previous.loc.end.line)) continue;
     const first = comments[0] ?? current;
 
     if (first.loc.start.line - previous.loc.end.line > 1) continue;

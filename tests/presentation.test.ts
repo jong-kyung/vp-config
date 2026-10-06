@@ -101,6 +101,7 @@ for (const [name, cases] of Object.entries({
       "// oxlint-disable-next-line no-debugger\ndebugger;",
       "// @ts-expect-error: Intentionally invalid input.\nconst value: number = '';",
       "// prettier-ignore\nconst value = { a: 1 };",
+      "/* node:coverage ignore next */\nfunction unused() {}",
       "// Do not embed */ in a generated block.\nconst value = 1;",
       "const object = {\n  // Property explanation.\n  value: 1,\n};",
       "// Detached heading.\n\nconst value = 1;",
@@ -162,6 +163,8 @@ for (const [name, cases] of Object.entries({
       "function run() {\n  const first = 1;\n  const second = 2;\n}",
       "function run(x: string): string;\nfunction run(x: number): number;\nfunction run(x) { return x; }",
       "const first = 1;\n\n/** Documentation. */\nconst second = 2;",
+      "doWork(); // oxlint-disable-next-line no-unused-vars\nconst unused = 1;",
+      "const unused = 1; // oxlint-disable-line no-unused-vars\nrun();",
     ],
     invalid: [
       {
@@ -177,6 +180,11 @@ for (const [name, cases] of Object.entries({
       {
         code: "const first = 1;\n/** Documentation. */\nconst second = 2;",
         output: "const first = 1;\n\n/** Documentation. */\nconst second = 2;",
+        errors: 1,
+      },
+      {
+        code: "doWork();\n// oxlint-disable-next-line no-unused-vars\nconst unused = 1;",
+        output: "doWork();\n\n// oxlint-disable-next-line no-unused-vars\nconst unused = 1;",
         errors: 1,
       },
       {

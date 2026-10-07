@@ -3,6 +3,7 @@ import { expect, test } from "vite-plus/test";
 import { nodeConfig, libConfig } from "../src/index.ts";
 import plugin from "../src/plugin.ts";
 import manifest from "../package.json" with { type: "json" };
+import toolchain from "vite-plus/package.json" with { type: "json" };
 
 const lint = nodeConfig.lint.extends[0]!;
 
@@ -11,8 +12,11 @@ const severity = (setting: NonNullable<typeof lint.rules>[string]) =>
 
 test("exports plain configuration objects and the exact approved inventory", () => {
   expect(manifest.peerDependencies).toEqual({ "vite-plus": "catalog:" });
+  expect(manifest.engines.node).toBe(toolchain.engines.node);
   expect(manifest.devDependencies).toEqual({
     "@types/node": "catalog:",
+    jscpd: "catalog:",
+    knip: "catalog:",
     typescript: "catalog:",
     "vite-plus": "catalog:",
   });

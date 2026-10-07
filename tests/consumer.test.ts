@@ -56,6 +56,7 @@ beforeAll(() => {
       2,
     ),
   );
+  writeFileSync(join(consumer, ".node-version"), readFileSync(join(root, ".node-version")));
   writeFileSync(
     join(consumer, "pnpm-workspace.yaml"),
     readFileSync(join(root, "pnpm-workspace.yaml")),

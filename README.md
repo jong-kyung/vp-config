@@ -158,14 +158,20 @@ Only the custom spacing and JSDoc rules offer autofixes. Spacing fixes preserve 
 
 ## Development
 
+Use the Node version in `.node-version`, which also selects the CI runtime. The package's supported Node range matches Vite+.
+
 ```bash
 vp install
 vp check
+vp run knip
+vp run duplication --baseline-from-ref origin/main
 vp test
 vp run build
 ```
 
-The tests build and pack the package, install its tarball into an external temporary project, and exercise configuration inheritance, warning and error exits, type-aware checks, formatter convergence, and partial staging. The consumer installation runs offline using dependencies populated by `vp install`. Git and the global `vp` command must be available.
+The tests build and pack the package, install its tarball into an external temporary project, and exercise configuration inheritance, warning and error exits, type-aware checks, formatter convergence, and partial staging. The consumer uses the same Node version and can download dependencies, so it does not require a warm cache. Its installation disables lifecycle scripts and permits a missing lockfile. Root CI installations use the frozen lockfile. Git and the global `vp` command must be available.
+
+Knip checks unused files, exports, and dependencies. The duplication command checks `src` against the supplied Git ref, permits existing clones, and fails on new clones or an unavailable baseline. Tests are outside the duplication scope.
 
 To inspect a release artifact without publishing:
 
@@ -175,6 +181,14 @@ vp pm pack --out /tmp/vp-config.tgz
 ```
 
 Publishing, pushing, and creating a pull request are separate manual steps.
+
+## CI
+
+Checks, Knip, and the full test suite run independently on Ubuntu for PRs, main pushes, manual runs, and Sundays at 02:00 UTC. The test suite includes the package build and installed-consumer checks. Duplication runs on PRs and main pushes, comparing against the PR base or the previous main commit. CI invokes the pinned jscpd CLI directly so failures propagate to the job.
+
+The `autofix.ci` workflow runs only on PRs and leaves other checks running. Enable the [autofix.ci GitHub App](https://autofix.ci/setup) for this repository separately. The service receives changed file contents and uses its own App permissions to push automatic fix commits. Fork PRs require the author's permission for maintainer edits. Workflow runners use read-only repository permissions and do not retain checkout credentials.
+
+Paths containing `.github` are checked by ordinary CI but excluded from automatic fixes because the service rejects patches containing those paths. There are no release or deployment workflows.
 
 ## License
 

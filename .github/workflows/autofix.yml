@@ -1,0 +1,30 @@
+name: autofix.ci
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  autofix:
+    if: github.event.pull_request.head.repo.full_name != github.repository || github.head_ref != 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: voidzero-dev/setup-vp@3754dd7dbdb32bd8f6d28b6043de13ad3a75f21f # v1.21.1
+        with:
+          node-version-file: .node-version
+          cache: true
+          run-install: false
+      - run: vp install --frozen-lockfile
+      # The service rejects any fix containing .github changes. CI still checks those files.
+      - name: Apply fixes outside .github
+        run: git ls-files -z -- . ':(exclude)*.github*' | xargs -0 -r vp check --fix --
+      - if: ${{ !cancelled() }}
+        uses: autofix-ci/action@c5b2d67aa2274e7b5a18224e8171550871fc7e4a
+        with:
+          fail-fast: false

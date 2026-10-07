@@ -89,28 +89,6 @@ The custom namespace is `jong-kyung`. The plugin entry is `@jong-kyung/vp-config
 
 Only the custom spacing and JSDoc rules offer autofixes. Spacing fixes preserve attached comments, imports, and overload groups. JSDoc conversion applies to function and class definitions, including those assigned to variables or properties. Other variables, types, interfaces, enums, and data properties allow both ordinary comments and JSDoc.
 
-### Analysis boundaries
-
-The custom rules are syntax checks, not a partial TypeScript type checker. They inspect direct annotations, ordinary local type aliases, and explicit built-in forms such as `Promise<unknown>` and `Record<string, unknown>`. Name shadowing and alias cycles are handled. Known-value checks use literals, value creation, direct concrete annotations, and simple local value aliases.
-
-Array checks recognize literals, direct array and tuple annotations, ordinary local aliases, and standard array-producing calls. Copy checks inspect inline reducer callbacks. Reflection and mocking checks follow lexical aliases and static property names, not runtime property mutations or cross-file exports.
-
-Generic argument substitution and defaults, call-site parameter and return contracts, type projection through destructuring and tuple elements, array unions, utility-type evaluation such as `Readonly<T>`, expression-result inference, and control-flow analysis are deliberately out of scope. Unsupported forms are skipped rather than guessed. Missing coverage in these forms is not a bug to patch case by case. Expanding this scope requires an explicit support decision.
-
-Reviews should prioritize incorrect diagnostics within the supported scope, unsafe autofixes, and broken configuration or packaging. License comments, suppression directives, and assertion SAFETY comments remain protected.
-
-Rules inspect the whole selected file. Staging selects files rather than restricting diagnostics to changed lines. `no-em-dash` covers source accepted by the linter, not Markdown documents or arbitrary assets.
-
-## Compatibility and updates
-
-The package is ESM-only and requires Vite+ **1.0.0** as its only runtime peer. It imports plugin APIs through `vite-plus/lint/plugins`. It does not install or bundle external lint plugins.
-
-The Node engine range follows Vite+: `^22.18.0 || ^24.11.0 || >=26.0.0`. Local verification used Node 24.21.0 on macOS. Other Node versions and operating systems have not completed a separate compatibility matrix.
-
-The verified toolchain contains Oxlint 1.85.0, Oxfmt 0.70.0, and oxlint-tsgolint 7.0.2003. Vite+'s JavaScript plugin API is experimental. Review the rule inventory, selected options, fixes, and packed-consumer tests before widening the Vite+ peer range. Upstream policy changes do not enter this package through automatic plugin updates.
-
-Vite+ 1.0.0 omits JavaScript rule settings from `vp lint --print-config`. Use that output to inspect native settings and plugin loading. The tests check custom settings and diagnostics separately.
-
 ## Development
 
 ```bash

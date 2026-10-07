@@ -27,7 +27,7 @@ tester.run(
         "wide",
         "annotation",
         "known",
-        "widened",
+        "widenedType",
       ] as const)
         expect(types[name]).toBe(other[name]);
 

@@ -8,8 +8,23 @@ function checkAssertion(
   types: TypeAnalysis,
   node: ESTree.TSAsExpression | ESTree.TSTypeAssertion,
 ): void {
-  if (!isConstType(node.typeAnnotation) && types.widened(node.expression))
-    context.report({ node, messageId: "avoid" });
+  if (isConstType(node.typeAnnotation)) return;
+  const previous = types.widenedType(node.expression);
+
+  if (!previous) return;
+  const target = types.expand(node.typeAnnotation);
+
+  if (
+    previous === target ||
+    (previous.type === target.type &&
+      (["TSUnknownKeyword", "TSAnyKeyword", "TSObjectKeyword"].includes(target.type) ||
+        (previous.type === "TSTypeLiteral" &&
+          target.type === "TSTypeLiteral" &&
+          previous.members.length === 0 &&
+          target.members.length === 0)))
+  )
+    return;
+  context.report({ node, messageId: "avoid" });
 }
 
 export default defineRule({

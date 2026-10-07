@@ -233,6 +233,8 @@ export class TypeAnalysis {
     if (node.type !== "Identifier") return false;
     const variable = binding(this.#context, node);
 
+    if (node.name === "undefined" && !variable?.defs.length) return true;
+
     if (!variable || seen.has(variable)) return false;
     seen.add(variable);
     const type = variable.identifiers.map(this.annotation).find((item) => item !== undefined);
@@ -260,10 +262,10 @@ export class TypeAnalysis {
       : variable.defs.some((definition) => isFunction(definition.node));
   }
 
-  widened(input: Ast, seen = new Set<Variable>()): boolean {
+  widenedType(input: Ast, seen = new Set<Variable>()): ESTree.TSType | undefined {
     const node = unwrap(input);
 
-    if (node.type !== "Identifier") return false;
+    if (node.type !== "Identifier") return undefined;
     const variable = binding(this.#context, node);
     const decl = declaration(this.#context, node);
 
@@ -275,11 +277,11 @@ export class TypeAnalysis {
       decl.parent.type !== "VariableDeclaration" ||
       decl.parent.kind !== "const"
     )
-      return false;
+      return undefined;
     seen.add(variable);
     const type = this.annotation(decl.id);
 
-    if (type && this.wide(type, true) && this.known(decl.init)) return true;
+    if (type && this.wide(type, true) && this.known(decl.init)) return this.expand(type);
     let initializer: Ast = decl.init;
 
     while (isTransparentWrapper(initializer)) {
@@ -288,10 +290,12 @@ export class TypeAnalysis {
         this.wide(initializer.typeAnnotation, true) &&
         this.known(initializer.expression)
       )
-        return true;
+        return this.expand(type ?? initializer.typeAnnotation);
       initializer = initializer.expression;
     }
 
-    return this.widened(initializer, seen);
+    const origin = this.widenedType(initializer, seen);
+
+    return origin && type ? this.expand(type) : origin;
   }
 }

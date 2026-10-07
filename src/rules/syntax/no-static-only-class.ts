@@ -34,7 +34,7 @@ function checkStaticClass(context: Context, node: ESTree.Class): void {
     )
       continue;
 
-    if (!member.static) return;
+    if (!member.static || member.accessibility === "protected") return;
     count++;
   }
 

@@ -115,9 +115,12 @@ for (const [name, cases] of Object.entries({
         code: "export class Helpers { static run(): void; }",
       })),
       "class Base { protected constructor() {} static create() {} }",
+      "class Base { protected static configure() {} }",
+      "const Base = class { static run() {} protected static value = 1; };",
     ],
     invalid: [
       { code: "class Utils { static run() {} }", errors: 1 },
+      { code: "class Utils { private static value = 1; public static run() {} }", errors: 1 },
       { code: "class Utils { private constructor() {} static run() {} }", errors: 1 },
       { code: "namespace SDK { export class Helpers { static run() {} } }", errors: 1 },
       { code: "const Utils = class { static value = 1; };", errors: 1 },

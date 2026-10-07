@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import type { UserConfig } from "vite-plus";
 import type { OxlintConfig } from "vite-plus/lint";
 import { nativeLint } from "./native.ts";
 
@@ -36,3 +37,20 @@ export const lint: OxlintConfig = {
 export const fmt = {};
 
 export const staged = { "*": "vp check --fix" };
+
+export const nodeConfig = {
+  lint: { extends: [lint] },
+  fmt,
+  staged,
+} satisfies UserConfig;
+
+export const libConfig = {
+  ...nodeConfig,
+  pack: {
+    platform: "neutral",
+    format: ["esm"],
+    target: "es2022",
+    dts: true,
+    exports: false,
+  },
+} satisfies UserConfig;

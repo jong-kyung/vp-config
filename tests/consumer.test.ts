@@ -97,7 +97,7 @@ test("loads the actual tarball and freezes the effective native rule inventory",
   `,
   ]);
 
-  expect(output.trim()).toBe("fmt,lint,staged");
+  expect(output.trim()).toBe("fmt,libConfig,lint,nodeConfig,staged");
   expect(existsSync(join(consumer, ".vite-hooks"))).toBe(false);
   const installed = join(consumer, "node_modules/@jong-kyung/vp-config");
   expect(JSON.parse(readFileSync(join(installed, "package.json"), "utf8"))).toMatchObject({

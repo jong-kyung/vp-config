@@ -1,5 +1,6 @@
+import { mergeConfig } from "vite-plus";
 import { expect, test } from "vite-plus/test";
-import { lint, fmt, staged } from "../src/index.ts";
+import { lint, fmt, staged, nodeConfig, libConfig } from "../src/index.ts";
 import plugin from "../src/plugin.ts";
 import manifest from "../package.json" with { type: "json" };
 
@@ -28,6 +29,86 @@ test("exports plain configuration objects and the exact approved inventory", () 
 
   expect(ownRules.sort()).toEqual(Object.keys(plugin.rules).sort());
   expect(ownRules).toHaveLength(21);
+});
+
+test("exports project presets with inherited lint and library-only packaging defaults", () => {
+  expect(Object.getPrototypeOf(nodeConfig)).toBe(Object.prototype);
+  expect(nodeConfig).toEqual({
+    lint: { extends: [lint] },
+    fmt: {},
+    staged: { "*": "vp check --fix" },
+  });
+  expect(libConfig).toEqual({
+    ...nodeConfig,
+    pack: {
+      platform: "neutral",
+      format: ["esm"],
+      target: "es2022",
+      dts: true,
+      exports: false,
+    },
+  });
+  expect(nodeConfig.lint.extends[0]).toBe(lint);
+  expect(mergeConfig(nodeConfig, { pack: { entry: ["server.ts"] } }).pack).toEqual({
+    entry: ["server.ts"],
+  });
+});
+
+test("composes root lint overrides without changing inherited rules or input objects", () => {
+  const extension = { rules: { curly: "error" } };
+
+  const overrides = {
+    lint: {
+      extends: [extension],
+      rules: { "jong-kyung/no-runtime-typeof": "off" },
+    },
+    fmt: { singleQuote: true },
+    test: { include: ["test/**/*.ts"] },
+    resolve: { alias: { "@": "/src" } },
+  };
+
+  const before = structuredClone({ nodeConfig, libConfig, overrides });
+
+  expect(mergeConfig(nodeConfig, overrides)).toEqual({
+    ...nodeConfig,
+    ...overrides,
+    lint: {
+      extends: [lint, extension],
+      rules: { "jong-kyung/no-runtime-typeof": "off" },
+    },
+  });
+  expect(mergeConfig(libConfig, { pack: { entry: ["src/index.ts"] } }).pack).toEqual({
+    ...libConfig.pack,
+    entry: ["src/index.ts"],
+  });
+  expect({ nodeConfig, libConfig, overrides }).toEqual(before);
+});
+
+test("retains native array concatenation and permits explicit section replacement", () => {
+  const merged = mergeConfig(libConfig, {
+    pack: { format: ["cjs"], target: ["es2020", "node20"], entry: ["src/index.ts"] },
+    staged: { "*": ["vp lint", "vp fmt"] },
+  });
+
+  expect(merged).toMatchObject({
+    pack: {
+      format: ["esm", "cjs"],
+      target: ["es2022", "es2020", "node20"],
+      entry: ["src/index.ts"],
+    },
+    staged: { "*": ["vp check --fix", "vp lint", "vp fmt"] },
+  });
+  expect({
+    ...merged,
+    pack: { ...libConfig.pack, format: ["cjs"] },
+    staged: { "*": ["vp lint", "vp fmt"] },
+  }).toMatchObject({
+    pack: { format: ["cjs"] },
+    staged: { "*": ["vp lint", "vp fmt"] },
+  });
+  expect(
+    mergeConfig(libConfig, { pack: { target: "es2020" }, staged: { "*": "vp lint" } }),
+  ).toMatchObject({ pack: { target: "es2020" }, staged: { "*": "vp lint" } });
 });
 
 test("preserves the selected custom rule options", () => {

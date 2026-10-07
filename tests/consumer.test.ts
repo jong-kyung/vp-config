@@ -10,10 +10,9 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 
 const consumer = mkdtempSync(join(tmpdir(), "vp-config-consumer-"));
 
-const config = `import { defineConfig } from "vite-plus";
-import { lint, fmt, staged } from "@jong-kyung/vp-config";
+const config = `import { nodeConfig } from "@jong-kyung/vp-config";
 
-export default defineConfig({ lint, fmt, staged });
+export default nodeConfig;
 `;
 
 function run(command: string, args: string[], cwd = consumer) {
@@ -83,14 +82,7 @@ beforeAll(() => {
 }, 120_000);
 
 afterAll(() => rmSync(consumer, { recursive: true, force: true }));
-beforeEach(() =>
-  writeFileSync(
-    join(consumer, "vite.config.ts"),
-    `import { nodeConfig } from "@jong-kyung/vp-config";
-export default nodeConfig;
-`,
-  ),
-);
+beforeEach(() => writeFileSync(join(consumer, "vite.config.ts"), config));
 
 test("loads the actual tarball and freezes the effective native rule inventory", () => {
   const output = pass(process.execPath, [
@@ -104,7 +96,7 @@ test("loads the actual tarball and freezes the effective native rule inventory",
   `,
   ]);
 
-  expect(output.trim()).toBe("fmt,libConfig,lint,nodeConfig,staged");
+  expect(output.trim()).toBe("libConfig,nodeConfig");
   expect(existsSync(join(consumer, ".vite-hooks"))).toBe(false);
   const installed = join(consumer, "node_modules/@jong-kyung/vp-config");
   expect(JSON.parse(readFileSync(join(installed, "package.json"), "utf8"))).toMatchObject({
@@ -129,9 +121,15 @@ test("loads the actual tarball and freezes the effective native rule inventory",
     'from "vite-plus/lint/plugins"',
   );
 
-  // Compare effective rules through both APIs; print-config omits inherited registration metadata.
+  // Compare inherited and direct rule configurations; print-config omits inherited registration metadata.
   const inherited = pass("vp", ["lint", "--print-config"]);
-  writeFileSync(join(consumer, "vite.config.ts"), config);
+  writeFileSync(
+    join(consumer, "vite.config.ts"),
+    config.replace(
+      "export default nodeConfig;",
+      "export default { lint: nodeConfig.lint.extends[0] };",
+    ),
+  );
 
   /** SAFETY: The pinned Vite+ command emits its documented configuration JSON; assertions below check the relevant fields. */
   const effective = JSON.parse(pass("vp", ["lint", "--print-config"])) as {
@@ -190,8 +188,8 @@ test("uses native inheritance and file overrides without a custom merge", () => 
   writeFileSync(
     join(consumer, "vite.config.ts"),
     config.replace(
-      "defineConfig({ lint, fmt, staged })",
-      `defineConfig({ lint: { extends: [lint], rules: { "jong-kyung/no-em-dash": "off" } }, fmt, staged })`,
+      "export default nodeConfig;",
+      `export default { lint: { ...nodeConfig.lint, rules: { "jong-kyung/no-em-dash": "off" } } };`,
     ),
   );
   const disabled = fixture('export const label = "a\u2014b";\n');
@@ -199,8 +197,8 @@ test("uses native inheritance and file overrides without a custom merge", () => 
   writeFileSync(
     join(consumer, "vite.config.ts"),
     config.replace(
-      "defineConfig({ lint, fmt, staged })",
-      `defineConfig({ lint: { extends: [lint], overrides: [{ files: ["case.ts"], rules: { "jong-kyung/no-em-dash": "warn" } }] }, fmt, staged })`,
+      "export default nodeConfig;",
+      `export default { lint: { ...nodeConfig.lint, overrides: [{ files: ["case.ts"], rules: { "jong-kyung/no-em-dash": "warn" } }] } };`,
     ),
   );
   const overridden = run("vp", ["check", "case.ts"]);
@@ -277,8 +275,18 @@ export const deliberate: number = "raw";
   pass("vp", ["check", "case.ts"]);
 }, 30_000);
 
-test("preserves partial staging and restores the index and worktree after failure", () => {
+test("runs consumer-owned staged checks and preserves partial staging", () => {
   pass("git", ["init", "-q"]);
+  const unconfigured = run("vp", ["staged"]);
+  expect(unconfigured.status).not.toBe(0);
+  expect(unconfigured.stdout + unconfigured.stderr).toContain('No "staged" config');
+  writeFileSync(
+    join(consumer, "vite.config.ts"),
+    `import { mergeConfig } from "vite-plus";
+import { nodeConfig } from "@jong-kyung/vp-config";
+export default mergeConfig(nodeConfig, { staged: { "*": "vp check --fix" } });
+`,
+  );
   pass("git", ["config", "user.name", "Config fixture"]);
   pass("git", ["config", "user.email", "fixture@example.invalid"]);
   writeFileSync(join(consumer, ".gitignore"), "node_modules/\n*.tgz\n");

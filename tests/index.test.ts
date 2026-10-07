@@ -1,8 +1,10 @@
 import { mergeConfig } from "vite-plus";
 import { expect, test } from "vite-plus/test";
-import { lint, fmt, staged, nodeConfig, libConfig } from "../src/index.ts";
+import { nodeConfig, libConfig } from "../src/index.ts";
 import plugin from "../src/plugin.ts";
 import manifest from "../package.json" with { type: "json" };
+
+const lint = nodeConfig.lint.extends[0]!;
 
 const severity = (setting: NonNullable<typeof lint.rules>[string]) =>
   Array.isArray(setting) ? setting[0] : setting;
@@ -16,8 +18,6 @@ test("exports plain configuration objects and the exact approved inventory", () 
   });
   expect("dependencies" in manifest).toBe(false);
   expect(Object.getPrototypeOf(lint)).toBe(Object.prototype);
-  expect(fmt).toEqual({});
-  expect(staged).toEqual({ "*": "vp check --fix" });
   const levels = Object.values(lint.rules!).map(severity);
   expect(levels.filter((level) => level === "error")).toHaveLength(94);
   expect(levels.filter((level) => level === "warn")).toHaveLength(20);
@@ -35,8 +35,6 @@ test("exports project presets with inherited lint and library-only packaging def
   expect(Object.getPrototypeOf(nodeConfig)).toBe(Object.prototype);
   expect(nodeConfig).toEqual({
     lint: { extends: [lint] },
-    fmt: {},
-    staged: { "*": "vp check --fix" },
   });
   expect(libConfig).toEqual({
     ...nodeConfig,
@@ -48,7 +46,6 @@ test("exports project presets with inherited lint and library-only packaging def
       exports: false,
     },
   });
-  expect(nodeConfig.lint.extends[0]).toBe(lint);
   expect(mergeConfig(nodeConfig, { pack: { entry: ["server.ts"] } }).pack).toEqual({
     entry: ["server.ts"],
   });
@@ -96,16 +93,14 @@ test("retains native array concatenation and permits explicit section replacemen
       target: ["es2022", "es2020", "node20"],
       entry: ["src/index.ts"],
     },
-    staged: { "*": ["vp check --fix", "vp lint", "vp fmt"] },
-  });
-  expect({
-    ...merged,
-    pack: { ...libConfig.pack, format: ["cjs"] },
-    staged: { "*": ["vp lint", "vp fmt"] },
-  }).toMatchObject({
-    pack: { format: ["cjs"] },
     staged: { "*": ["vp lint", "vp fmt"] },
   });
+  expect(
+    mergeConfig(
+      { ...libConfig, pack: { ...libConfig.pack, format: ["cjs"] } },
+      { pack: { entry: ["src/index.ts"] } },
+    ),
+  ).toMatchObject({ pack: { format: ["cjs"], entry: ["src/index.ts"] } });
   expect(
     mergeConfig(libConfig, { pack: { target: "es2020" }, staged: { "*": "vp lint" } }),
   ).toMatchObject({ pack: { target: "es2020" }, staged: { "*": "vp lint" } });

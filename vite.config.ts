@@ -1,8 +1,8 @@
 import { defineConfig } from "vite-plus";
-import { lint, fmt, staged } from "./src/index.ts";
+import { nodeConfig } from "./src/index.ts";
 
 export default defineConfig({
-  staged,
+  staged: { "*": "vp check --fix" },
   pack: {
     entry: ["src/index.ts", "src/plugin.ts"],
     target: "node22.18",
@@ -12,9 +12,8 @@ export default defineConfig({
     exports: false,
   },
   lint: {
-    ...lint,
+    ...nodeConfig.lint.extends[0],
     // Load source while developing, without requiring an earlier package build.
     jsPlugins: [{ name: "jong-kyung", specifier: "./src/plugin.ts" }],
   },
-  fmt,
 });

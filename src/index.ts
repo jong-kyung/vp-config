@@ -3,7 +3,7 @@ import type { UserConfig } from "vite-plus";
 import type { OxlintConfig } from "vite-plus/lint";
 import { nativeLint } from "./native.ts";
 
-export const lint: OxlintConfig = {
+const lint: OxlintConfig = {
   ...nativeLint,
   jsPlugins: [
     { name: "jong-kyung", specifier: fileURLToPath(new URL("./plugin.mjs", import.meta.url)) },
@@ -34,14 +34,8 @@ export const lint: OxlintConfig = {
   },
 };
 
-export const fmt = {};
-
-export const staged = { "*": "vp check --fix" };
-
 export const nodeConfig = {
   lint: { extends: [lint] },
-  fmt,
-  staged,
 } satisfies UserConfig;
 
 export const libConfig = {

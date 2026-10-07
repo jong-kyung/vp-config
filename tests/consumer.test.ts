@@ -83,7 +83,14 @@ beforeAll(() => {
 }, 120_000);
 
 afterAll(() => rmSync(consumer, { recursive: true, force: true }));
-beforeEach(() => writeFileSync(join(consumer, "vite.config.ts"), config));
+beforeEach(() =>
+  writeFileSync(
+    join(consumer, "vite.config.ts"),
+    `import { nodeConfig } from "@jong-kyung/vp-config";
+export default nodeConfig;
+`,
+  ),
+);
 
 test("loads the actual tarball and freezes the effective native rule inventory", () => {
   const output = pass(process.execPath, [
@@ -122,6 +129,10 @@ test("loads the actual tarball and freezes the effective native rule inventory",
     'from "vite-plus/lint/plugins"',
   );
 
+  // Compare effective rules through both APIs; print-config omits inherited registration metadata.
+  const inherited = pass("vp", ["lint", "--print-config"]);
+  writeFileSync(join(consumer, "vite.config.ts"), config);
+
   /** SAFETY: The pinned Vite+ command emits its documented configuration JSON; assertions below check the relevant fields. */
   const effective = JSON.parse(pass("vp", ["lint", "--print-config"])) as {
     rules: Record<string, string | [string]>;
@@ -129,16 +140,21 @@ test("loads the actual tarball and freezes the effective native rule inventory",
     jsPlugins: { name: string; specifier: string }[];
   };
 
-  // Vite+ 1.0.0 prints native settings but omits JavaScript plugin rule settings.
+  /** SAFETY: This is the same pinned CLI output shape; the assertions below validate its rule inventory and severities. */
+  const inheritedRules = (JSON.parse(inherited) as typeof effective).rules;
+
+  // Vite+ 1.0.0 omits JavaScript rule settings and inherited native options from print-config.
   expect(Object.keys(effective.rules).sort()).toEqual(Object.keys(nativeLint.rules!).sort());
+  expect(Object.keys(inheritedRules).sort()).toEqual(Object.keys(effective.rules).sort());
   expect(Object.values(effective.categories)).toEqual(Array(7).fill("allow"));
 
   for (const [name, setting] of Object.entries(nativeLint.rules!)) {
     const expected = Array.isArray(setting) ? setting[0] : setting;
-    const actual = effective.rules[name]!;
-    expect(Array.isArray(actual) ? actual[0] : actual, name).toBe(
-      expected === "error" ? "deny" : expected === "off" ? "allow" : "warn",
-    );
+
+    for (const actual of [effective.rules[name]!, inheritedRules[name]!])
+      expect(Array.isArray(actual) ? actual[0] : actual, name).toBe(
+        expected === "error" ? "deny" : expected === "off" ? "allow" : "warn",
+      );
   }
 
   expect(effective.jsPlugins).toHaveLength(1);
@@ -158,6 +174,13 @@ test("honors warning exit codes, errors, type checks, and ordinary warning fixes
   const promise = fixture("Promise.resolve(1);\n");
   expect(promise.status).not.toBe(0);
   expect(promise.stdout + promise.stderr).toContain("no-floating-promises");
+
+  const unused = fixture(
+    "export function select(unused: string, value: string) {\n  return value;\n}\n",
+  );
+
+  expect(unused.status).not.toBe(0);
+  expect(unused.stdout + unused.stderr).toContain("no-unused-vars");
   const spread = fixture("export const values = [...[1, 2]];\n", true);
   expect(spread.status, spread.stdout + spread.stderr).toBe(0);
   expect(readFileSync(join(consumer, "case.ts"), "utf8")).toBe("export const values = [1, 2];\n");
@@ -183,6 +206,56 @@ test("uses native inheritance and file overrides without a custom merge", () => 
   const overridden = run("vp", ["check", "case.ts"]);
   expect(overridden.status, overridden.stdout + overridden.stderr).toBe(0);
   expect(overridden.stdout + overridden.stderr).toContain("no-em-dash");
+}, 30_000);
+
+test("merges root rule overrides and additional lint extensions with the Node preset", () => {
+  const source = "export const kind = typeof 1;\n";
+  const warning = fixture(source);
+  expect(warning.status, warning.stdout + warning.stderr).toBe(0);
+  expect(warning.stdout + warning.stderr).toContain("no-runtime-typeof");
+  writeFileSync(
+    join(consumer, "vite.config.ts"),
+    `import { mergeConfig } from "vite-plus";
+import { nodeConfig } from "@jong-kyung/vp-config";
+export default mergeConfig(nodeConfig, {
+  lint: {
+    extends: [{ rules: { "no-console": "error" } }],
+    rules: { "jong-kyung/no-runtime-typeof": "off" },
+  },
+});
+`,
+  );
+  const disabled = fixture(source);
+  expect(disabled.status, disabled.stdout + disabled.stderr).toBe(0);
+  expect(disabled.stdout + disabled.stderr).not.toContain("no-runtime-typeof");
+  const extended = fixture('console.log("ready");\n');
+  expect(extended.status).not.toBe(0);
+  expect(extended.stdout + extended.stderr).toContain("no-console");
+}, 30_000);
+
+test("builds an ESM library and declarations through a native config callback without manifest changes", () => {
+  const manifestPath = join(consumer, "package.json");
+  const original = readFileSync(manifestPath, "utf8");
+  writeFileSync(join(consumer, "case.ts"), "export const answer = 42;\n");
+  writeFileSync(
+    join(consumer, "vite.config.ts"),
+    `import { defineConfig, mergeConfig } from "vite-plus";
+import { libConfig } from "@jong-kyung/vp-config";
+export default defineConfig(({ mode }) => mergeConfig(libConfig, {
+  pack: { entry: ["case.ts"], sourcemap: mode !== "production" },
+}));
+`,
+  );
+  pass("vp", ["pack"]);
+  expect(readFileSync(join(consumer, "dist/case.d.ts"), "utf8")).toContain("answer");
+  expect(
+    pass(process.execPath, [
+      "--input-type=module",
+      "-e",
+      'import { answer } from "./dist/case.js"; console.log(answer);',
+    ]).trim(),
+  ).toBe("42");
+  expect(readFileSync(manifestPath, "utf8")).toBe(original);
 }, 30_000);
 
 test("converges formatting and fixes while preserving compiler directives", () => {

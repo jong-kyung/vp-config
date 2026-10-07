@@ -14,7 +14,11 @@ export class TypeAnalysis {
   #declare(node: Ast, name: string, alias: ESTree.TSTypeAliasDeclaration | null) {
     let owner = node.type === "ClassExpression" ? node : node.parent;
 
-    while (owner?.type === "ExportNamedDeclaration" || owner?.type === "ImportDeclaration")
+    while (
+      owner?.type === "ExportNamedDeclaration" ||
+      owner?.type === "ExportDefaultDeclaration" ||
+      owner?.type === "ImportDeclaration"
+    )
       owner = owner.parent;
 
     if (!owner) return;

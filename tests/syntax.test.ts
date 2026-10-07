@@ -132,6 +132,7 @@ for (const [name, cases] of Object.entries({
       "unknownFactory().filter(test).map(convert);",
       "function run(Array) { return Array.from(values).filter(test).map(convert); }",
       "type Array<T> = IteratorObject<T>; function run(values: Array<number>) { return values.filter(test).map(convert); }",
+      "export default interface Array<T> extends IteratorObject<T> {} function run(values: Array<number>) { return values.filter(test).map(convert); }",
       "let values = []; values = other; values.filter(test).map(convert);",
       "function run<Array>(values: Array) { return values.filter(test).map(convert); }",
       "const values = other; const other = values; values.filter(test).map(convert);",

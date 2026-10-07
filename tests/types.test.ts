@@ -50,12 +50,18 @@ for (const [name, cases] of Object.entries({
       "const run = () => value;",
       "type Promise<T> = string; function run(): Promise<unknown> { return ''; }",
       "import Promise = Custom.Promise; declare function load(): Promise<unknown>;",
+      "export default interface Promise<T> {} declare function load(): Promise<unknown>;",
+      "export default class Promise<T> {} declare function load(): Promise<unknown>;",
     ],
     invalid: [
       { code: "function run(): unknown { return value; }", errors: 1 },
       { code: "async function run(): Promise<unknown> { return value; }", errors: 1 },
       { code: "type Result = unknown; declare function run(): Result;", errors: 1 },
       { code: "interface Service { run(): PromiseLike<unknown>; }", errors: 1 },
+      {
+        code: "export default (class Promise<T> {}); declare function load(): Promise<unknown>;",
+        errors: 1,
+      },
     ],
   },
   "no-unknown-type-aliases": {
@@ -81,6 +87,7 @@ for (const [name, cases] of Object.entries({
       "type Data = { [K in string as 'value']: unknown };",
       "function run<T extends Record<string, unknown>>(value: T) {}",
       "type Record<K, V> = { value: string }; type Data = Record<string, unknown>;",
+      "export default interface Record<K, V> {} type Data = Record<string, unknown>;",
     ],
     invalid: [
       { code: "type Data = Record<string, unknown>;", errors: 1 },

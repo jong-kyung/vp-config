@@ -15,12 +15,12 @@ const config = `import { nodeConfig } from "@jong-kyung/vp-config";
 export default nodeConfig;
 `;
 
-function run(command: string, args: string[], cwd = consumer) {
-  return spawnSync(command, args, { cwd, encoding: "utf8", timeout: 30_000, maxBuffer: 2_000_000 });
+function run(command: string, args: string[], cwd = consumer, timeout = 30_000) {
+  return spawnSync(command, args, { cwd, encoding: "utf8", timeout, maxBuffer: 2_000_000 });
 }
 
-function pass(command: string, args: string[], cwd = consumer): string {
-  const result = run(command, args, cwd);
+function pass(command: string, args: string[], cwd = consumer, timeout?: number): string {
+  const result = run(command, args, cwd, timeout);
   expect(result.status, `${result.error?.message ?? ""}\n${result.stdout}\n${result.stderr}`).toBe(
     0,
   );
@@ -78,8 +78,9 @@ beforeAll(() => {
       2,
     ),
   );
-  pass("vp", ["install", "--offline", "--ignore-scripts"]);
-}, 120_000);
+  // This isolated consumer has no lockfile and must also install on a fresh CI runner.
+  pass("vp", ["install", "--no-frozen-lockfile", "--ignore-scripts"], consumer, 120_000);
+}, 240_000);
 
 afterAll(() => rmSync(consumer, { recursive: true, force: true }));
 beforeEach(() => writeFileSync(join(consumer, "vite.config.ts"), config));

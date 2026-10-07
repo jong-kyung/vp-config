@@ -46,7 +46,7 @@ export function parameterRule(kind: "TSUnknownKeyword" | "TSObjectKeyword"): Rul
       messages: {
         avoid:
           kind === "TSUnknownKeyword"
-            ? "Give inputs a concrete contract, or document this unvalidated boundary."
+            ? "Give inputs a concrete contract, or suppress this rule with a reason for an intentional unvalidated boundary."
             : "Describe the input's structure instead of accepting object.",
       },
     },

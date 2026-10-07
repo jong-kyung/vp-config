@@ -40,7 +40,8 @@ export default defineRule({
   meta: {
     schema: [],
     messages: {
-      avoid: "Give dictionary values a concrete contract, or document this raw-data boundary.",
+      avoid:
+        "Give dictionary values a concrete contract, or suppress this rule with a reason for an intentional raw-data boundary.",
     },
   },
   create(context) {

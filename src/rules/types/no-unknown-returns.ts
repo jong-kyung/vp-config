@@ -14,7 +14,8 @@ export default defineRule({
   meta: {
     schema: [],
     messages: {
-      avoid: "Return a concrete contract, or document why unvalidated data leaves this boundary.",
+      avoid:
+        "Return a concrete contract, or suppress this rule with a reason for an intentional unvalidated boundary.",
     },
   },
   create(context) {

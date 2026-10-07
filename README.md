@@ -1,6 +1,6 @@
 # @jong-kyung/vp-config
 
-My shared lint, formatting, and staged-check policy for TypeScript libraries and Node tools using Vite+ 1.0.0. It exports plain `lint`, `fmt`, and `staged` objects. React presets are outside this release.
+Shared Vite+ 1.0.0 configuration for my Node applications and environment-neutral TypeScript libraries. Use `nodeConfig` or `libConfig` and compose project-specific settings with Vite+'s `mergeConfig`. React presets are outside this release.
 
 ## Use
 
@@ -10,34 +10,79 @@ In an existing Vite+ project, install the package and its exact peer dependency:
 vp add -D --save-exact @jong-kyung/vp-config vite-plus@1.0.0
 ```
 
+### Node applications
+
 Configure `vite.config.ts`:
 
 ```ts
-import { defineConfig } from "vite-plus";
-import { lint, fmt, staged } from "@jong-kyung/vp-config";
+import { nodeConfig } from "@jong-kyung/vp-config";
 
-export default defineConfig({ lint, fmt, staged });
+export default nodeConfig;
 ```
+
+The preset includes the shared lint policy. It does not prescribe an application build, packaging configuration, or execution command.
+
+### TypeScript libraries
+
+```ts
+import { mergeConfig } from "vite-plus";
+import { libConfig } from "@jong-kyung/vp-config";
+
+export default mergeConfig(libConfig, {
+  pack: {
+    entry: ["src/index.ts"],
+  },
+});
+```
+
+Run `vp pack` to build the library. `libConfig` includes the same shared policy as `nodeConfig` and these packaging defaults:
+
+```json
+{
+  "platform": "neutral",
+  "format": ["esm"],
+  "target": "es2022",
+  "dts": true,
+  "exports": false
+}
+```
+
+Provide your own entry points. Manage public package entry points in `package.json`, or opt into native exports generation in your project. Other packaging options use the toolchain's defaults.
+
+The neutral platform and ES2022 target do not make Node-specific code portable or add runtime polyfills. Library authors remain responsible for their supported environments. Shared test, coverage, and task policies are not included.
+
+### Checks and hooks
 
 Run `vp check` to check formatting, lint, and types. Run `vp check --fix` to apply ordinary fixes. The configuration enables both `typeAware` and `typeCheck`, so keep a working `tsconfig.json` in the consuming project. Some native checks rely on strict null checking. This package does not change your TypeScript configuration.
 
-`fmt` uses Oxfmt defaults. `staged` contains `{ "*": "vp check --fix" }`. Run `vp config` in your project if you want Vite+ to install commit hooks. Importing this package and installing its tarball do not install hooks.
-
-Warnings remain nonblocking in commit checks and CI. They can still produce ordinary autofixes. In particular, `unicorn/no-useless-spread` remains a warning with its native ordinary fixes enabled. Review those changes because warning severity does not guarantee semantic safety. The staged command enables neither dangerous fixes nor suggestion fixes.
-
-## Override the policy
-
-Use Oxlint's native composition rather than a configuration factory:
+Neither preset defines `fmt` or `staged`. Oxfmt defaults apply when you do not configure formatting. Add your own settings as needed:
 
 ```ts
-import { defineConfig } from "vite-plus";
-import { lint, fmt, staged } from "@jong-kyung/vp-config";
+import { mergeConfig } from "vite-plus";
+import { nodeConfig } from "@jong-kyung/vp-config";
 
-export default defineConfig({
+export default mergeConfig(nodeConfig, {
+  fmt: { singleQuote: true },
+  staged: { "*": "vp check --fix" },
+});
+```
+
+Configure `staged` before running `vp staged`, which fails without that setting. Run `vp config` in your project if you want Vite+ to install commit hooks. Importing this package and installing its tarball do not install hooks.
+
+Warnings remain nonblocking in commit checks and CI. They can still produce ordinary autofixes. In particular, `unicorn/no-useless-spread` remains a warning with its native ordinary fixes enabled. Review those changes because warning severity does not guarantee semantic safety. The example staged command enables neither dangerous fixes nor suggestion fixes.
+
+## Override the presets
+
+Import `mergeConfig` from `vite-plus`, not from this package:
+
+```ts
+import { mergeConfig } from "vite-plus";
+import { nodeConfig } from "@jong-kyung/vp-config";
+
+export default mergeConfig(nodeConfig, {
   lint: {
-    extends: [lint],
     rules: {
-      "jong-kyung/no-unknown-parameters": "off",
+      "jong-kyung/no-runtime-typeof": "off",
     },
     overrides: [
       {
@@ -46,12 +91,34 @@ export default defineConfig({
       },
     ],
   },
-  fmt,
-  staged,
 });
 ```
 
-Compose `fmt` and `staged` with ordinary object spread when needed. Keep the exported objects unchanged and place project-specific changes in your own objects.
+The project presets inherit the shared lint policy through `lint.extends`. Root rule overrides therefore use Oxlint's native precedence without merging into the preset's rule-option arrays.
+
+### Array merging and replacement
+
+`mergeConfig` recursively merges objects and concatenates values when either side is an array. Adding `pack.format: ["cjs"]` to `libConfig` produces `["esm", "cjs"]`, not a replacement. Entry arrays do not duplicate preset entries because no default entries are supplied.
+
+For replacement, construct the relevant section before merging other project settings. For example, a consumer that needs Node-targeted CommonJS output can replace the library format:
+
+```ts
+import { mergeConfig } from "vite-plus";
+import { libConfig } from "@jong-kyung/vp-config";
+
+const config = {
+  ...libConfig,
+  pack: { ...libConfig.pack, platform: "node", format: ["cjs"] },
+};
+
+export default mergeConfig(config, {
+  pack: { entry: ["src/index.ts"] },
+});
+```
+
+There are no preset formatting or staged values to concatenate with consumer settings. The package does not provide custom merge behavior or distribute library defaults across multiple pack configurations.
+
+For environment callbacks or asynchronous setup, use `defineConfig` from `vite-plus` and call `mergeConfig` after producing your configuration object. Treat presets as shared values and compose new objects rather than mutating them.
 
 For a local exception, use an Oxlint suppression comment with a reason. Assertion comments serve a different purpose: explain the checked invariant with a nearby `SAFETY:` comment. `as const` does not need that comment. You can configure alternative markers through `jong-kyung/require-safety-comment-for-type-assertion`.
 
@@ -61,7 +128,7 @@ The preset enables 114 rules: 94 errors and 20 warnings. It uses 93 native rules
 
 All seven native categories are disabled before the reviewed rule map is applied, which prevents unreviewed default rules from entering the preset. The native plugins are TypeScript, Oxc, and Unicorn. Consumers can add plugins or override rules through native configuration.
 
-The custom namespace is `jong-kyung`. The plugin entry is `@jong-kyung/vp-config/plugin`; normal consumers only need the three configuration objects. The preset resolves the plugin relative to its installed package, not the consumer's working directory.
+The custom namespace is `jong-kyung`. The plugin entry is `@jong-kyung/vp-config/plugin`; normal consumers only need a project preset. The preset resolves the plugin relative to its installed package, not the consumer's working directory.
 
 | Custom rule                                 | Behavior                                                                                                                                                                              |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

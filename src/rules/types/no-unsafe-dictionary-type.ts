@@ -1,7 +1,7 @@
 import { defineRule } from "vite-plus/lint/plugins";
-import type { ESTree } from "vite-plus/lint/plugins";
+import type { Context, ESTree } from "vite-plus/lint/plugins";
 import type { Ast } from "../../analysis/ast.ts";
-import { createTypeAnalysis } from "../../analysis/type-analysis.ts";
+import { TypeAnalysis } from "../../analysis/type-analysis.ts";
 
 function inConstraint(node: Ast): boolean {
   const range = node.range;
@@ -21,6 +21,21 @@ function inConstraint(node: Ast): boolean {
   return false;
 }
 
+function checkDictionary(
+  context: Context,
+  types: TypeAnalysis,
+  node: ESTree.TSIndexSignature | ESTree.TSTypeReference | ESTree.TSMappedType,
+): void {
+  if (inConstraint(node)) return;
+
+  const unsafe =
+    node.type === "TSIndexSignature"
+      ? types.unsafeValue(node.typeAnnotation.typeAnnotation)
+      : types.unsafeDictionary(node);
+
+  if (unsafe) context.report({ node, messageId: "avoid" });
+}
+
 export default defineRule({
   meta: {
     schema: [],
@@ -29,17 +44,10 @@ export default defineRule({
     },
   },
   create(context) {
-    const types = createTypeAnalysis(context);
-    function check(node: ESTree.TSIndexSignature | ESTree.TSTypeReference | ESTree.TSMappedType) {
-      if (inConstraint(node)) return;
+    const types = new TypeAnalysis(context);
 
-      const unsafe =
-        node.type === "TSIndexSignature"
-          ? types.unsafeValue(node.typeAnnotation.typeAnnotation)
-          : types.unsafeDictionary(node);
-
-      if (unsafe) context.report({ node, messageId: "avoid" });
-    }
+    const check = (node: ESTree.TSIndexSignature | ESTree.TSTypeReference | ESTree.TSMappedType) =>
+      checkDictionary(context, types, node);
 
     return {
       TSIndexSignature: check,

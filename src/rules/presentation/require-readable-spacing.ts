@@ -14,6 +14,14 @@ function declarationNode(node: Ast): Ast {
   return node;
 }
 
+function isDeclaration(node: Ast): boolean {
+  return /Declaration$/.test(node.type);
+}
+
+function multilineBinding(node: Ast): boolean {
+  return node.type === "VariableDeclaration" && node.loc.end.line > node.loc.start.line;
+}
+
 function checkSpacing(context: Context, statements: readonly Ast[], topLevel: boolean): void {
   const source = context.sourceCode;
   const newline = source.text.includes("\r\n") ? "\r\n" : "\n";
@@ -28,10 +36,6 @@ function checkSpacing(context: Context, statements: readonly Ast[], topLevel: bo
 
     if (isFunction(left) && isFunction(right) && !left.body && left.id?.name === right.id?.name)
       continue;
-    const isDeclaration = (node: Ast): boolean => /Declaration$/.test(node.type);
-
-    const multilineBinding = (node: Ast): boolean =>
-      node.type === "VariableDeclaration" && node.loc.end.line > node.loc.start.line;
 
     const controlFlow =
       /^(?:Return|Throw|If|For|ForIn|ForOf|While|DoWhile|Switch|Try|Break|Continue)Statement$/.test(

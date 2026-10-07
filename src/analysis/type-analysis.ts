@@ -2,48 +2,53 @@ import type { Context, ESTree, Variable } from "vite-plus/lint/plugins";
 import { binding, declaration, isFunction, isTransparentWrapper, unwrap, walk } from "./ast.ts";
 import type { Ast } from "./ast.ts";
 
-export function createTypeAnalysis(context: Context) {
-  const scopes = new Map<Ast, Map<string, ESTree.TSTypeAliasDeclaration | null>>();
-  let indexed = false;
+export class TypeAnalysis {
+  readonly #context: Context;
+  readonly #scopes = new Map<Ast, Map<string, ESTree.TSTypeAliasDeclaration | null>>();
+  #indexed = false;
 
-  function declare(node: Ast, name: string, alias: ESTree.TSTypeAliasDeclaration | null) {
+  constructor(context: Context) {
+    this.#context = context;
+  }
+
+  #declare(node: Ast, name: string, alias: ESTree.TSTypeAliasDeclaration | null) {
     let owner = node.type === "ClassExpression" ? node : node.parent;
 
     while (owner?.type === "ExportNamedDeclaration" || owner?.type === "ImportDeclaration")
       owner = owner.parent;
 
     if (!owner) return;
-    let entries = scopes.get(owner);
+    let entries = this.#scopes.get(owner);
 
     if (!entries) {
       entries = new Map();
-      scopes.set(owner, entries);
+      this.#scopes.set(owner, entries);
     }
 
     entries.set(name, alias);
   }
 
-  function lookup(name: string, from: Ast): ESTree.TSTypeAliasDeclaration | null | undefined {
-    if (!indexed) {
-      walk(context, context.sourceCode.ast, (node) => {
-        if (node.type === "TSTypeAliasDeclaration") declare(node, node.id.name, node);
+  #lookup(name: string, from: Ast): ESTree.TSTypeAliasDeclaration | null | undefined {
+    if (!this.#indexed) {
+      walk(this.#context, this.#context.sourceCode.ast, (node) => {
+        if (node.type === "TSTypeAliasDeclaration") this.#declare(node, node.id.name, node);
         else if (
           node.type === "TSInterfaceDeclaration" ||
           node.type === "ClassDeclaration" ||
           node.type === "ClassExpression"
         ) {
-          if (node.id) declare(node, node.id.name, null);
+          if (node.id) this.#declare(node, node.id.name, null);
         } else if (
           node.type === "ImportSpecifier" ||
           node.type === "ImportDefaultSpecifier" ||
           node.type === "ImportNamespaceSpecifier"
         ) {
-          declare(node, node.local.name, null);
+          this.#declare(node, node.local.name, null);
         } else if (node.type === "TSImportEqualsDeclaration") {
-          declare(node, node.id.name, null);
+          this.#declare(node, node.id.name, null);
         }
       });
-      indexed = true;
+      this.#indexed = true;
     }
 
     let node: Ast | null = from;
@@ -55,7 +60,7 @@ export function createTypeAnalysis(context: Context) {
         (node.type === "TSMappedType" && node.key.name === name)
       )
         return null;
-      const entries = scopes.get(node);
+      const entries = this.#scopes.get(node);
 
       if (entries?.has(name)) return entries.get(name);
       node = node.parent;
@@ -65,7 +70,7 @@ export function createTypeAnalysis(context: Context) {
   }
 
   /** Follow ordinary aliases only. Generic instantiation belongs to the type checker. */
-  function expand(input: ESTree.TSType): ESTree.TSType {
+  expand(input: ESTree.TSType): ESTree.TSType {
     let node = input;
     const seen = new Set<Ast>();
 
@@ -75,7 +80,7 @@ export function createTypeAnalysis(context: Context) {
       if (node.type === "TSParenthesizedType") {
         node = node.typeAnnotation;
       } else if (node.type === "TSTypeReference" && node.typeName.type === "Identifier") {
-        const alias = lookup(node.typeName.name, node);
+        const alias = this.#lookup(node.typeName.name, node);
 
         if (!alias || alias.typeParameters?.params.length || node.typeArguments) break;
         node = alias.typeAnnotation;
@@ -85,22 +90,22 @@ export function createTypeAnalysis(context: Context) {
     return node;
   }
 
-  function standard(node: ESTree.TSType, name: string): boolean {
+  standard(node: ESTree.TSType, name: string): boolean {
     return (
       node.type === "TSTypeReference" &&
       node.typeName.type === "Identifier" &&
       node.typeName.name === name &&
-      lookup(name, node) === undefined
+      this.#lookup(name, node) === undefined
     );
   }
 
-  function contains(
+  contains(
     input: ESTree.TSType,
     kinds: readonly string[],
     promises = false,
     seen = new Set<Ast>(),
   ): boolean {
-    const node = expand(input);
+    const node = this.expand(input);
 
     if (kinds.includes(node.type)) return true;
 
@@ -108,30 +113,30 @@ export function createTypeAnalysis(context: Context) {
     const next = new Set(seen).add(node);
 
     if (node.type === "TSUnionType")
-      return node.types.some((type) => contains(type, kinds, promises, next));
+      return node.types.some((type) => this.contains(type, kinds, promises, next));
 
     if (
       promises &&
       node.type === "TSTypeReference" &&
-      (standard(node, "Promise") || standard(node, "PromiseLike"))
+      (this.standard(node, "Promise") || this.standard(node, "PromiseLike"))
     ) {
       const result = node.typeArguments?.params[0];
 
-      return !!result && contains(result, kinds, true, next);
+      return !!result && this.contains(result, kinds, true, next);
     }
 
     return false;
   }
 
-  function unsafeValue(input: ESTree.TSType, includeAny = true, seen = new Set<Ast>()): boolean {
-    const node = expand(input);
+  unsafeValue(input: ESTree.TSType, includeAny = true, seen = new Set<Ast>()): boolean {
+    const node = this.expand(input);
 
     if (seen.has(node)) return false;
 
     if (node.type === "TSUnionType") {
       const next = new Set(seen).add(node);
 
-      return node.types.some((type) => unsafeValue(type, includeAny, next));
+      return node.types.some((type) => this.unsafeValue(type, includeAny, next));
     }
 
     return (
@@ -141,16 +146,16 @@ export function createTypeAnalysis(context: Context) {
     );
   }
 
-  function openDictionary(input: ESTree.TSType): boolean {
-    const node = expand(input);
+  openDictionary(input: ESTree.TSType): boolean {
+    const node = this.expand(input);
     let key: ESTree.TSType | undefined;
 
-    if (node.type === "TSTypeReference" && standard(node, "Record"))
+    if (node.type === "TSTypeReference" && this.standard(node, "Record"))
       key = node.typeArguments?.params[0];
     else if (node.type === "TSMappedType") key = node.nameType ?? node.constraint;
 
     if (key)
-      return contains(key, [
+      return this.contains(key, [
         "TSStringKeyword",
         "TSNumberKeyword",
         "TSSymbolKeyword",
@@ -163,52 +168,56 @@ export function createTypeAnalysis(context: Context) {
     );
   }
 
-  function unsafeDictionary(input: ESTree.TSType): boolean {
-    const node = expand(input);
+  unsafeDictionary(input: ESTree.TSType): boolean {
+    const node = this.expand(input);
 
-    if (!openDictionary(node)) return false;
+    if (!this.openDictionary(node)) return false;
 
     if (node.type === "TSTypeReference") {
       const value = node.typeArguments?.params[1];
 
-      return !!value && unsafeValue(value);
+      return !!value && this.unsafeValue(value);
     }
 
     if (node.type === "TSMappedType")
-      return !!node.typeAnnotation && unsafeValue(node.typeAnnotation);
+      return !!node.typeAnnotation && this.unsafeValue(node.typeAnnotation);
 
     return (
       node.type === "TSTypeLiteral" &&
       node.members.some(
         (member) =>
-          member.type === "TSIndexSignature" && unsafeValue(member.typeAnnotation.typeAnnotation),
+          member.type === "TSIndexSignature" &&
+          this.unsafeValue(member.typeAnnotation.typeAnnotation),
       )
     );
   }
 
-  function wide(type: ESTree.TSType, includeAny = false): boolean {
-    return unsafeValue(type, includeAny) || type.type === "TSTypeLiteral" || openDictionary(type);
+  wide(type: ESTree.TSType, includeAny = false): boolean {
+    return (
+      this.unsafeValue(type, includeAny) ||
+      type.type === "TSTypeLiteral" ||
+      this.openDictionary(type)
+    );
   }
 
-  function annotation(node: Ast): ESTree.TSType | undefined {
-    if (node.type === "TSParameterProperty") return annotation(node.parameter);
-
-    if (node.type === "AssignmentPattern") return annotation(node.left);
+  annotation(this: void, node: Ast): ESTree.TSType | undefined {
+    while (node.type === "TSParameterProperty" || node.type === "AssignmentPattern")
+      node = node.type === "TSParameterProperty" ? node.parameter : node.left;
 
     return "typeAnnotation" in node && node.typeAnnotation?.type === "TSTypeAnnotation"
       ? node.typeAnnotation.typeAnnotation
       : undefined;
   }
 
-  function known(node: Ast, seen = new Set<Variable>()): boolean {
+  known(node: Ast, seen = new Set<Variable>()): boolean {
     if (isTransparentWrapper(node)) {
       if (
         (node.type === "TSAsExpression" || node.type === "TSTypeAssertion") &&
-        unsafeValue(node.typeAnnotation)
+        this.unsafeValue(node.typeAnnotation)
       )
         return false;
 
-      return known(node.expression, seen);
+      return this.known(node.expression, seen);
     }
 
     if (isFunction(node)) return true;
@@ -226,11 +235,11 @@ export function createTypeAnalysis(context: Context) {
       return true;
 
     if (node.type !== "Identifier") return false;
-    const variable = binding(context, node);
+    const variable = binding(this.#context, node);
 
     if (!variable || seen.has(variable)) return false;
     seen.add(variable);
-    const type = variable.identifiers.map(annotation).find((item) => item !== undefined);
+    const type = variable.identifiers.map(this.annotation).find((item) => item !== undefined);
 
     if (type)
       return [
@@ -247,20 +256,20 @@ export function createTypeAnalysis(context: Context) {
         "TSTypeLiteral",
         "TSFunctionType",
         "TSConstructorType",
-      ].includes(expand(type).type);
-    const decl = declaration(context, node);
+      ].includes(this.expand(type).type);
+    const decl = declaration(this.#context, node);
 
     return decl?.init
-      ? known(decl.init, seen)
+      ? this.known(decl.init, seen)
       : variable.defs.some((definition) => isFunction(definition.node));
   }
 
-  function widened(input: Ast, seen = new Set<Variable>()): boolean {
+  widened(input: Ast, seen = new Set<Variable>()): boolean {
     const node = unwrap(input);
 
     if (node.type !== "Identifier") return false;
-    const variable = binding(context, node);
-    const decl = declaration(context, node);
+    const variable = binding(this.#context, node);
+    const decl = declaration(this.#context, node);
 
     if (
       !variable ||
@@ -272,34 +281,21 @@ export function createTypeAnalysis(context: Context) {
     )
       return false;
     seen.add(variable);
-    const type = annotation(decl.id);
+    const type = this.annotation(decl.id);
 
-    if (type && wide(type, true) && known(decl.init)) return true;
+    if (type && this.wide(type, true) && this.known(decl.init)) return true;
     let initializer: Ast = decl.init;
 
     while (isTransparentWrapper(initializer)) {
       if (
         (initializer.type === "TSAsExpression" || initializer.type === "TSTypeAssertion") &&
-        wide(initializer.typeAnnotation, true) &&
-        known(initializer.expression)
+        this.wide(initializer.typeAnnotation, true) &&
+        this.known(initializer.expression)
       )
         return true;
       initializer = initializer.expression;
     }
 
-    return widened(initializer, seen);
+    return this.widened(initializer, seen);
   }
-
-  return {
-    expand,
-    standard,
-    contains,
-    unsafeValue,
-    unsafeDictionary,
-    openDictionary,
-    wide,
-    annotation,
-    known,
-    widened,
-  };
 }

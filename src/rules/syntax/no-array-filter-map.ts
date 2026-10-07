@@ -1,6 +1,6 @@
 import { defineRule } from "vite-plus/lint/plugins";
 import { memberName, unwrap } from "../../analysis/ast.ts";
-import { createArrayAnalysis } from "../../analysis/array-analysis.ts";
+import { ArrayAnalysis } from "../../analysis/array-analysis.ts";
 
 export default defineRule({
   meta: {
@@ -8,7 +8,7 @@ export default defineRule({
     messages: { avoid: "Combine adjacent eager array filter and map passes deliberately." },
   },
   create(context) {
-    const isArray = createArrayAnalysis(context);
+    const arrays = new ArrayAnalysis(context);
 
     return {
       CallExpression(node) {
@@ -29,7 +29,7 @@ export default defineRule({
         )
           return;
 
-        if (isArray(inner.object)) context.report({ node, messageId: "avoid" });
+        if (arrays.isArray(inner.object)) context.report({ node, messageId: "avoid" });
       },
     };
   },

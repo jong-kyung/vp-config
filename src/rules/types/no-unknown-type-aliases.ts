@@ -1,10 +1,10 @@
 import { defineRule } from "vite-plus/lint/plugins";
-import { createTypeAnalysis } from "../../analysis/type-analysis.ts";
+import { TypeAnalysis } from "../../analysis/type-analysis.ts";
 
 export default defineRule({
   meta: { schema: [], messages: { avoid: "Do not hide unknown behind a type alias." } },
   create(context) {
-    const types = createTypeAnalysis(context);
+    const types = new TypeAnalysis(context);
 
     return {
       TSTypeAliasDeclaration(node) {

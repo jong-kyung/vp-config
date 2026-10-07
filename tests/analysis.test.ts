@@ -1,0 +1,55 @@
+import { describe, expect, it } from "vite-plus/test";
+import { defineRule } from "vite-plus/lint/plugins";
+import { RuleTester } from "vite-plus/lint/plugins-dev";
+import { TypeAnalysis } from "../src/analysis/type-analysis.ts";
+import { ArrayAnalysis } from "../src/analysis/array-analysis.ts";
+
+RuleTester.describe = describe;
+RuleTester.it = it;
+
+const tester = new RuleTester({ languageOptions: { parserOptions: { lang: "ts" } } });
+
+tester.run(
+  "shared analysis methods",
+  defineRule({
+    meta: { schema: [] },
+    create(context) {
+      const types = new TypeAnalysis(context);
+      const other = new TypeAnalysis(context);
+
+      for (const name of [
+        "expand",
+        "standard",
+        "contains",
+        "unsafeValue",
+        "unsafeDictionary",
+        "openDictionary",
+        "wide",
+        "annotation",
+        "known",
+        "widened",
+      ] as const)
+        expect(types[name]).toBe(other[name]);
+
+      expect(new ArrayAnalysis(context).isArray === new ArrayAnalysis(context).isArray).toBe(true);
+
+      return {
+        FunctionDeclaration(node) {
+          expect(node.params.map(types.annotation).map((type) => type?.type)).toEqual([
+            "TSStringKeyword",
+          ]);
+        },
+        TSParameterProperty(node) {
+          const { annotation } = types;
+          expect(annotation(node)?.type).toBe("TSStringKeyword");
+        },
+      };
+    },
+  }),
+  {
+    valid: [
+      "function run(value: string = '') {} class State { constructor(public value: string = '') {} }",
+    ],
+    invalid: [],
+  },
+);

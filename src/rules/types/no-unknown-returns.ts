@@ -1,6 +1,14 @@
 import { defineRule } from "vite-plus/lint/plugins";
+import type { Context } from "vite-plus/lint/plugins";
 import type { Signature } from "../../analysis/ast.ts";
-import { createTypeAnalysis } from "../../analysis/type-analysis.ts";
+import { TypeAnalysis } from "../../analysis/type-analysis.ts";
+
+function checkReturn(context: Context, types: TypeAnalysis, node: Signature): void {
+  const type = node.returnType?.typeAnnotation;
+
+  if (type && types.contains(type, ["TSUnknownKeyword"], true))
+    context.report({ node: type, messageId: "avoid" });
+}
 
 export default defineRule({
   meta: {
@@ -10,13 +18,8 @@ export default defineRule({
     },
   },
   create(context) {
-    const types = createTypeAnalysis(context);
-    function check(node: Signature) {
-      const type = node.returnType?.typeAnnotation;
-
-      if (type && types.contains(type, ["TSUnknownKeyword"], true))
-        context.report({ node: type, messageId: "avoid" });
-    }
+    const types = new TypeAnalysis(context);
+    const check = (node: Signature) => checkReturn(context, types, node);
 
     return {
       FunctionDeclaration: check,

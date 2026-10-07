@@ -1,5 +1,5 @@
 import { defineRule } from "vite-plus/lint/plugins";
-import type { Context, ESTree } from "vite-plus/lint/plugins";
+import type { Context, ESTree, Variable } from "vite-plus/lint/plugins";
 import {
   binding,
   enclosingFunction,
@@ -11,12 +11,16 @@ import {
   unwrap,
 } from "../../analysis/ast.ts";
 import type { Ast } from "../../analysis/ast.ts";
-import { createArrayAnalysis } from "../../analysis/array-analysis.ts";
+import { ArrayAnalysis } from "../../analysis/array-analysis.ts";
+
+function isAccumulator(context: Context, value: Ast, variable: Variable): boolean {
+  return binding(context, resolveValue(context, value)) === variable;
+}
 
 function checkReducerCopy(
   context: Context,
   node: ESTree.CallExpression,
-  isArray: (input: Ast) => boolean,
+  arrays: ArrayAnalysis,
 ): void {
   const fn = enclosingFunction(node);
 
@@ -40,12 +44,9 @@ function checkReducerCopy(
 
   if (!variable || hasReassignment(variable)) return;
 
-  const isAccumulator = (value: Ast): boolean =>
-    binding(context, resolveValue(context, value)) === variable;
-
   const path = referencePath(context, node.callee);
   const initial = call.arguments[1];
-  const arrayAccumulator = (initial && isArray(initial)) || isArray(accumulator);
+  const arrayAccumulator = (initial && arrays.isArray(initial)) || arrays.isArray(accumulator);
   let copies = false;
 
   if (
@@ -53,9 +54,9 @@ function checkReducerCopy(
     node.arguments[0] &&
     unwrap(node.arguments[0]).type === "ObjectExpression"
   ) {
-    copies = node.arguments.slice(1).some(isAccumulator);
+    copies = node.arguments.slice(1).some((value) => isAccumulator(context, value, variable));
   } else if (arrayAccumulator && path === "Array.from" && node.arguments[0]) {
-    copies = isAccumulator(node.arguments[0]);
+    copies = isAccumulator(context, node.arguments[0], variable);
   } else {
     const callee = unwrap(node.callee);
     copies =
@@ -73,7 +74,7 @@ function checkReducerCopy(
         "toSpliced",
         "with",
       ].includes(memberName(callee) ?? "") &&
-      isAccumulator(callee.object);
+      isAccumulator(context, callee.object, variable);
   }
 
   if (copies) context.report({ node, messageId: "avoid" });
@@ -87,8 +88,8 @@ export default defineRule({
     },
   },
   create(context) {
-    const isArray = createArrayAnalysis(context);
+    const arrays = new ArrayAnalysis(context);
 
-    return { CallExpression: (node) => checkReducerCopy(context, node, isArray) };
+    return { CallExpression: (node) => checkReducerCopy(context, node, arrays) };
   },
 });

@@ -1,7 +1,7 @@
 import { defineRule } from "vite-plus/lint/plugins";
-import type { ESTree, Rule } from "vite-plus/lint/plugins";
+import type { Context, ESTree, Rule } from "vite-plus/lint/plugins";
 import type { Ast, Signature } from "../../analysis/ast.ts";
-import { createTypeAnalysis } from "../../analysis/type-analysis.ts";
+import { TypeAnalysis } from "../../analysis/type-analysis.ts";
 
 function parameterBinding(node: ESTree.ParamPattern): Ast {
   if (node.type === "TSParameterProperty") return parameterBinding(node.parameter);
@@ -9,6 +9,34 @@ function parameterBinding(node: ESTree.ParamPattern): Ast {
   if (node.type === "AssignmentPattern") return node.left;
 
   return node;
+}
+
+function checkParameters(
+  context: Context,
+  types: TypeAnalysis,
+  kind: "TSUnknownKeyword" | "TSObjectKeyword",
+  node: Signature,
+): void {
+  for (const parameter of node.params) {
+    const target = parameterBinding(parameter);
+    const type = types.annotation(parameter);
+
+    if (!type || !types.contains(type, [kind])) continue;
+
+    if (kind === "TSUnknownKeyword" && target.type === "Identifier") {
+      if (target.name === "cause") continue;
+      const predicate = node.returnType?.typeAnnotation;
+
+      if (
+        predicate?.type === "TSTypePredicate" &&
+        (predicate.parameterName.type === "TSThisType" ? "this" : predicate.parameterName.name) ===
+          target.name
+      )
+        continue;
+    }
+
+    context.report({ node: type, messageId: "avoid" });
+  }
 }
 
 export function parameterRule(kind: "TSUnknownKeyword" | "TSObjectKeyword"): Rule {
@@ -23,30 +51,8 @@ export function parameterRule(kind: "TSUnknownKeyword" | "TSObjectKeyword"): Rul
       },
     },
     create(context) {
-      const types = createTypeAnalysis(context);
-      function check(node: Signature) {
-        for (const parameter of node.params) {
-          const target = parameterBinding(parameter);
-          const type = types.annotation(parameter);
-
-          if (!type || !types.contains(type, [kind])) continue;
-
-          if (kind === "TSUnknownKeyword" && target.type === "Identifier") {
-            if (target.name === "cause") continue;
-            const predicate = node.returnType?.typeAnnotation;
-
-            if (
-              predicate?.type === "TSTypePredicate" &&
-              (predicate.parameterName.type === "TSThisType"
-                ? "this"
-                : predicate.parameterName.name) === target.name
-            )
-              continue;
-          }
-
-          context.report({ node: type, messageId: "avoid" });
-        }
-      }
+      const types = new TypeAnalysis(context);
+      const check = (node: Signature) => checkParameters(context, types, kind, node);
 
       return {
         FunctionDeclaration: check,

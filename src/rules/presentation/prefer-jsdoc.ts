@@ -1,22 +1,35 @@
 import { defineRule } from "vite-plus/lint/plugins";
 import type { ESTree } from "vite-plus/lint/plugins";
-import { walk } from "../../analysis/ast.ts";
+import { isFunction, unwrap, walk } from "../../analysis/ast.ts";
+import type { Ast } from "../../analysis/ast.ts";
 import { attachedComments, exportedNode } from "../../analysis/comments.ts";
 
-const documentationTargets = new Set([
-  "VariableDeclaration",
-  "FunctionDeclaration",
-  "TSDeclareFunction",
-  "ClassDeclaration",
-  "TSTypeAliasDeclaration",
-  "TSInterfaceDeclaration",
-  "TSEnumDeclaration",
-  "MethodDefinition",
-  "PropertyDefinition",
-  "AccessorProperty",
-  "TSMethodSignature",
-  "TSPropertySignature",
-]);
+function isDocumentationTarget(input: Ast): boolean {
+  const node = unwrap(input);
+
+  if (node.type === "VariableDeclaration")
+    return node.declarations.every(
+      (declaration) =>
+        declaration.id.type === "Identifier" &&
+        !!declaration.init &&
+        isDocumentationTarget(declaration.init),
+    );
+
+  if (
+    node.type === "Property" ||
+    node.type === "PropertyDefinition" ||
+    node.type === "AccessorProperty"
+  )
+    return !!node.value && isDocumentationTarget(node.value);
+
+  return (
+    isFunction(node) ||
+    node.type === "ClassDeclaration" ||
+    node.type === "ClassExpression" ||
+    node.type === "MethodDefinition" ||
+    node.type === "TSMethodSignature"
+  );
+}
 
 function directiveComment(comment: ESTree.Comment): boolean {
   if (comment.type === "Line" && comment.value.startsWith("/")) return true;
@@ -32,7 +45,7 @@ export default defineRule({
   meta: {
     schema: [],
     fixable: "code",
-    messages: { documentation: "Use JSDoc for this existing declaration comment." },
+    messages: { documentation: "Use JSDoc for this existing function or class comment." },
   },
   create(context) {
     return {
@@ -41,7 +54,7 @@ export default defineRule({
         const source = context.sourceCode;
         const newline = source.text.includes("\r\n") ? "\r\n" : "\n";
         walk(context, program, (node) => {
-          if (!documentationTargets.has(node.type)) return;
+          if (!isDocumentationTarget(node)) return;
           const target = exportedNode(node);
           const comments = attachedComments(context, target);
 

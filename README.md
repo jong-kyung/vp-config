@@ -63,31 +63,31 @@ All seven native categories are disabled before the reviewed rule map is applied
 
 The custom namespace is `jong-kyung`. The plugin entry is `@jong-kyung/vp-config/plugin`; normal consumers only need the three configuration objects. The preset resolves the plugin relative to its installed package, not the consumer's working directory.
 
-| Custom rule                                 | Behavior                                                                                                                                                      |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `no-array-filter-map`                       | Flags adjacent eager array filter and map passes when local syntax establishes an array.                                                                      |
-| `no-reduce-accumulator-copy`                | Flags copying inline reducer accumulators through array-copy methods, `Array.from`, or `Object.assign`. The native accumulation rule covers spread copies.    |
-| `no-chained-type-assertions`                | Flags consecutive assertions, with an exception for chains consisting only of const assertions.                                                               |
-| `no-conditional-empty-object-spread`        | Flags object spreads whose conditional expression has an empty-object branch.                                                                                 |
-| `no-object-parameters`                      | Flags `object` input contracts, including local aliases and unions.                                                                                           |
-| `no-reflect-apply`                          | Flags calls to the global reflection API, including local aliases.                                                                                            |
-| `no-reflect-get`                            | Flags calls to the global reflection API, including local aliases.                                                                                            |
-| `no-unknown-type-aliases`                   | Flags aliases that resolve to `unknown` or unions containing it.                                                                                              |
-| `no-widen-then-assert`                      | Flags asserting a new contract after erasing known information through const bindings.                                                                        |
-| `require-readable-spacing`                  | Inserts blank lines between declaration groups, around multiline bindings, before control flow, and after blocks.                                             |
-| `no-known-value-widening`                   | Warns about known local values flowing into explicit broad contracts. Empty dictionary accumulators and finite-key records remain valid.                      |
-| `no-module-mocking`                         | Warns about `mock`, `doMock`, and `unstable_mockModule` calls through Jest, Vitest, and Vite+ test bindings.                                                  |
-| `no-runtime-typeof`                         | Warns about runtime representation checks outside explicit type predicates and assertion functions. Undefined existence probes remain valid.                  |
-| `no-unknown-parameters`                     | Warns about unknown input contracts, except `cause` and the exact subject of a type predicate.                                                                |
-| `no-unknown-returns`                        | Warns about explicit unknown returns, including Promise and PromiseLike wrappers.                                                                             |
-| `no-unsafe-dictionary-type`                 | Warns about dictionary values described as unknown, any, object, or an empty type literal. Generic constraints remain valid.                                  |
-| `require-safety-comment-for-type-assertion` | Requires a nonempty invariant explanation near a non-const assertion.                                                                                         |
-| `no-static-only-class`                      | Flags static-only classes while preserving meaningful inheritance, decorators, abstract classes, static blocks, and constructors.                             |
-| `no-em-dash`                                | Flags literal em-dash characters anywhere in the parsed source, including strings. It does not rewrite string values.                                         |
-| `prefer-jsdoc`                              | Converts existing attached declaration comments to JSDoc while preserving directives and avoiding unsafe comment text. It does not require new documentation. |
-| `no-trivial-type-aliases`                   | Warns about top-level, nongeneric primitive aliases. Unknown aliases belong to the separate error rule.                                                       |
+| Custom rule                                 | Behavior                                                                                                                                                                              |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `no-array-filter-map`                       | Flags adjacent eager array filter and map passes when local syntax establishes an array.                                                                                              |
+| `no-reduce-accumulator-copy`                | Flags copying inline reducer accumulators through array-copy methods, `Array.from`, or `Object.assign`. The native accumulation rule covers spread copies.                            |
+| `no-chained-type-assertions`                | Flags consecutive assertions, with an exception for chains consisting only of const assertions.                                                                                       |
+| `no-conditional-empty-object-spread`        | Flags object spreads whose conditional expression has an empty-object branch.                                                                                                         |
+| `no-object-parameters`                      | Flags `object` input contracts, including local aliases and unions.                                                                                                                   |
+| `no-reflect-apply`                          | Flags calls to the global reflection API, including local aliases.                                                                                                                    |
+| `no-reflect-get`                            | Flags calls to the global reflection API, including local aliases.                                                                                                                    |
+| `no-unknown-type-aliases`                   | Flags aliases that resolve to `unknown` or unions containing it.                                                                                                                      |
+| `no-widen-then-assert`                      | Flags asserting a new contract after erasing known information through const bindings.                                                                                                |
+| `require-readable-spacing`                  | Inserts blank lines between declaration groups, around multiline bindings, before control flow, and after blocks.                                                                     |
+| `no-known-value-widening`                   | Warns about known local values flowing into explicit broad contracts. Empty dictionary accumulators and finite-key records remain valid.                                              |
+| `no-module-mocking`                         | Warns about `mock`, `doMock`, and `unstable_mockModule` calls through Jest, Vitest, and Vite+ test bindings.                                                                          |
+| `no-runtime-typeof`                         | Warns about runtime representation checks outside explicit type predicates and assertion functions. Undefined existence probes remain valid.                                          |
+| `no-unknown-parameters`                     | Warns about unknown input contracts, except `cause` and the exact subject of a type predicate.                                                                                        |
+| `no-unknown-returns`                        | Warns about explicit unknown returns, including Promise and PromiseLike wrappers.                                                                                                     |
+| `no-unsafe-dictionary-type`                 | Warns about dictionary values described as unknown, any, object, or an empty type literal. Generic constraints remain valid.                                                          |
+| `require-safety-comment-for-type-assertion` | Requires a nonempty invariant explanation near a non-const assertion.                                                                                                                 |
+| `no-static-only-class`                      | Flags static-only classes while preserving meaningful inheritance, decorators, abstract classes, static blocks, and constructors.                                                     |
+| `no-em-dash`                                | Flags literal em-dash characters anywhere in the parsed source, including strings. It does not rewrite string values.                                                                 |
+| `prefer-jsdoc`                              | Converts existing function and class comments to JSDoc, including arrow functions, function expressions, and methods. It preserves directives and does not require new documentation. |
+| `no-trivial-type-aliases`                   | Warns about top-level, nongeneric primitive aliases. Unknown aliases belong to the separate error rule.                                                                               |
 
-Only the custom spacing and JSDoc rules offer autofixes. Spacing fixes preserve attached comments, imports, and overload groups. JSDoc conversion excludes object-literal property comments.
+Only the custom spacing and JSDoc rules offer autofixes. Spacing fixes preserve attached comments, imports, and overload groups. JSDoc conversion applies to function and class definitions, including those assigned to variables or properties. Other variables, types, interfaces, enums, and data properties allow both ordinary comments and JSDoc.
 
 ### Analysis boundaries
 

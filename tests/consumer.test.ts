@@ -188,7 +188,7 @@ test("uses native inheritance and file overrides without a custom merge", () => 
 test("converges formatting and fixes while preserving compiler directives", () => {
   const first = fixture(
     `// User-facing title.
-export const title='Kim';
+export const title=()=>'Kim';
 // @ts-expect-error: The fixture checks directive preservation.
 export const deliberate: number = "raw";
 `,

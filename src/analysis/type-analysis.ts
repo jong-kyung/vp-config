@@ -193,11 +193,7 @@ export class TypeAnalysis {
   }
 
   wide(type: ESTree.TSType, includeAny = false): boolean {
-    return (
-      this.unsafeValue(type, includeAny) ||
-      type.type === "TSTypeLiteral" ||
-      this.openDictionary(type)
-    );
+    return this.unsafeValue(type, includeAny) || this.openDictionary(type);
   }
 
   annotation(this: void, node: Ast): ESTree.TSType | undefined {

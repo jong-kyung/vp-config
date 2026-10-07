@@ -50,6 +50,15 @@ export default defineRule({
       VariableDeclarator(node) {
         checkWidening(context, types, types.annotation(node.id), node.init, node);
       },
+      AssignmentPattern(node) {
+        checkWidening(context, types, types.annotation(node.left), node.right, node);
+      },
+      PropertyDefinition(node) {
+        checkWidening(context, types, types.annotation(node), node.value, node);
+      },
+      AccessorProperty(node) {
+        checkWidening(context, types, types.annotation(node), node.value, node);
+      },
       AssignmentExpression(node) {
         if (node.operator !== "=") return;
         const variable = binding(context, node.left);

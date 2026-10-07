@@ -162,6 +162,16 @@ for (const [name, cases] of Object.entries({
         errors: 1,
       },
       {
+        code: "/*/api endpoint */\nfunction run() {}",
+        output: "/** /api endpoint */\nfunction run() {}",
+        errors: 1,
+      },
+      {
+        code: "/*/api endpoint\n  Details. */\nclass Service {}",
+        output: "/** /api endpoint\n  Details. */\nclass Service {}",
+        errors: 1,
+      },
+      {
         code: "/* /api/users endpoint. */\nfunction run() {}",
         output: "/** /api/users endpoint. */\nfunction run() {}",
         errors: 1,

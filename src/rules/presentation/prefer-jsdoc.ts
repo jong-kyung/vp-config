@@ -91,7 +91,7 @@ export default defineRule({
           let replacement: string;
 
           if (comments.length === 1 && first.type === "Block") {
-            replacement = `/**${first.value}*/`;
+            replacement = `/**${first.value.replace(/^\//, " /")}*/`;
           } else {
             if (comments.some((comment) => comment.type !== "Line")) return;
             const lines = comments.map((comment) => comment.value.trim());

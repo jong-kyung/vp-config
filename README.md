@@ -1,6 +1,6 @@
 # @jong-kyung/vp-config
 
-My shared lint, formatting, and staged-check policy for TypeScript libraries and Node tools using Vite+ 1.0.0. It exports plain `lint`, `fmt`, and `staged` objects. React presets are outside this release.
+Shared Vite+ 1.0.0 configuration for my Node applications and environment-neutral TypeScript libraries. Use `nodeConfig` or `libConfig` and compose project-specific settings with Vite+'s `mergeConfig`. The individual `lint`, `fmt`, and `staged` exports remain available. React presets are outside this release.
 
 ## Use
 
@@ -10,14 +10,48 @@ In an existing Vite+ project, install the package and its exact peer dependency:
 vp add -D --save-exact @jong-kyung/vp-config vite-plus@1.0.0
 ```
 
+### Node applications
+
 Configure `vite.config.ts`:
 
 ```ts
-import { defineConfig } from "vite-plus";
-import { lint, fmt, staged } from "@jong-kyung/vp-config";
+import { nodeConfig } from "@jong-kyung/vp-config";
 
-export default defineConfig({ lint, fmt, staged });
+export default nodeConfig;
 ```
+
+The preset includes shared lint, formatting, and staged checks. It does not prescribe an application build, packaging configuration, or execution command.
+
+### TypeScript libraries
+
+```ts
+import { mergeConfig } from "vite-plus";
+import { libConfig } from "@jong-kyung/vp-config";
+
+export default mergeConfig(libConfig, {
+  pack: {
+    entry: ["src/index.ts"],
+  },
+});
+```
+
+Run `vp pack` to build the library. `libConfig` includes the same shared policy as `nodeConfig` and these packaging defaults:
+
+```json
+{
+  "platform": "neutral",
+  "format": ["esm"],
+  "target": "es2022",
+  "dts": true,
+  "exports": false
+}
+```
+
+Provide your own entry points. Manage public package entry points in `package.json`, or opt into native exports generation in your project. Other packaging options use the toolchain's defaults.
+
+The neutral platform and ES2022 target do not make Node-specific code portable or add runtime polyfills. Library authors remain responsible for their supported environments. Shared test, coverage, and task policies are not included.
+
+### Checks and hooks
 
 Run `vp check` to check formatting, lint, and types. Run `vp check --fix` to apply ordinary fixes. The configuration enables both `typeAware` and `typeCheck`, so keep a working `tsconfig.json` in the consuming project. Some native checks rely on strict null checking. This package does not change your TypeScript configuration.
 
@@ -25,9 +59,56 @@ Run `vp check` to check formatting, lint, and types. Run `vp check --fix` to app
 
 Warnings remain nonblocking in commit checks and CI. They can still produce ordinary autofixes. In particular, `unicorn/no-useless-spread` remains a warning with its native ordinary fixes enabled. Review those changes because warning severity does not guarantee semantic safety. The staged command enables neither dangerous fixes nor suggestion fixes.
 
-## Override the policy
+## Override the presets
 
-Use Oxlint's native composition rather than a configuration factory:
+Import `mergeConfig` from `vite-plus`, not from this package:
+
+```ts
+import { mergeConfig } from "vite-plus";
+import { nodeConfig } from "@jong-kyung/vp-config";
+
+export default mergeConfig(nodeConfig, {
+  lint: {
+    rules: {
+      "jong-kyung/no-runtime-typeof": "off",
+    },
+    overrides: [
+      {
+        files: ["**/*.test.ts"],
+        rules: { "jong-kyung/no-module-mocking": "off" },
+      },
+    ],
+  },
+});
+```
+
+The project presets inherit the shared lint policy through `lint.extends`. Root rule overrides therefore use Oxlint's native precedence without merging into the preset's rule-option arrays.
+
+### Array merging and replacement
+
+`mergeConfig` recursively merges objects and concatenates values when either side is an array. Adding `pack.format: ["cjs"]` to `libConfig` produces `["esm", "cjs"]`, not a replacement. A staged command array also retains the preset's existing command. Entry arrays do not duplicate preset entries because no default entries are supplied.
+
+For replacement, construct the relevant section after merging:
+
+```ts
+import { mergeConfig } from "vite-plus";
+import { nodeConfig } from "@jong-kyung/vp-config";
+
+export default {
+  ...mergeConfig(nodeConfig, { fmt: { singleQuote: true } }),
+  staged: {
+    "*": ["vp lint", "vp fmt"],
+  },
+};
+```
+
+This replaces the staged check policy, so choose the commands your project requires. The package does not provide custom merge behavior or distribute library defaults across multiple pack configurations.
+
+For environment callbacks or asynchronous setup, use `defineConfig` from `vite-plus` and call `mergeConfig` after producing your configuration object. Treat presets as shared values and compose new objects rather than mutating them.
+
+### Individual configuration objects
+
+The existing exports also work with `defineConfig({ lint, fmt, staged })`. When changing the raw lint policy, use Oxlint's native composition rather than deep-merging its rule-option arrays:
 
 ```ts
 import { defineConfig } from "vite-plus";
@@ -61,7 +142,7 @@ The preset enables 114 rules: 94 errors and 20 warnings. It uses 93 native rules
 
 All seven native categories are disabled before the reviewed rule map is applied, which prevents unreviewed default rules from entering the preset. The native plugins are TypeScript, Oxc, and Unicorn. Consumers can add plugins or override rules through native configuration.
 
-The custom namespace is `jong-kyung`. The plugin entry is `@jong-kyung/vp-config/plugin`; normal consumers only need the three configuration objects. The preset resolves the plugin relative to its installed package, not the consumer's working directory.
+The custom namespace is `jong-kyung`. The plugin entry is `@jong-kyung/vp-config/plugin`; normal consumers only need a project preset or the individual configuration objects. The preset resolves the plugin relative to its installed package, not the consumer's working directory.
 
 | Custom rule                                 | Behavior                                                                                                                                                                              |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -12,6 +12,9 @@ export default mergeConfig(
   },
   {
     staged: { "*": "vp check --fix" },
+    test: {
+      include: ["tests/**/*.test.ts"],
+    },
     pack: {
       entry: ["src/index.ts", "src/plugin.ts"],
       target: "node22.18",

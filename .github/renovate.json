@@ -29,9 +29,8 @@
       "matchManagers": ["github-actions"]
     },
     {
-      "groupName": "npm devDependencies (non-major)",
-      "matchManagers": ["npm"],
-      "matchDepTypes": ["devDependencies", "pnpm.catalog.*"],
+      "groupName": "npm packages (non-major)",
+      "matchDatasources": ["npm"],
       "matchUpdateTypes": ["patch", "minor"]
     },
     {

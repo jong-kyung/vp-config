@@ -1,0 +1,156 @@
+import type { RuleTester } from "vite-plus/lint/plugins-dev";
+import plugin from "../../src/plugin.ts";
+import { tester } from "../helpers/rule-tester.ts";
+
+const cases = {
+  valid: [
+    "const value = 1;",
+    "function run() {} class Example {} const callback = () => {};",
+    "// User-facing name.\nexport const name = 'Kim';",
+    "/* User-facing name. */\nconst name = 'Kim';",
+    "// SAFETY: The parser validated this identifier.\nconst id = value as Id;",
+    "// Identifier contract.\ntype Id = string;",
+    "// User contract.\ninterface User {\n // Name.\n name: string;\n}",
+    "// Available states.\nenum State { Ready }",
+    "class User {\n // User-facing name.\n name = '';\n // Current value.\n accessor value = 1;\n}",
+    "/** Identifier contract. */\ntype Id = string;",
+    "/** User contract. */\ninterface User { /** Name. */ name: string; }",
+    "class User {\n /** User-facing name. */\n name = '';\n}",
+    "/** Callback. */\nconst run = () => {};",
+    "/** Service. */\nconst Service = class {};",
+    "// Loaded value.\nconst value = load();",
+    "// Shared declarations.\nconst value = 1, run = () => {};",
+    "// Stored callback.\nconst callback = run;",
+    "// Call signature.\ntype Callback = () => void;",
+    "//\nfunction run() {}",
+    "/* */\nfunction run() {}",
+    "/** User-facing name. */\nconst name = 'Kim';",
+    "/*! Copyright Example */\nconst value = 1;",
+    "/*! Copyright Example */\nexport function run() {}",
+    "/*!\r\n * Copyright Example\r\n */\r\nclass Example {}",
+    "/*! Copyright Example */\n// Details.\nfunction run() {}",
+    "/*! Copyright Example */\n\nfunction run() {}",
+    "/* @license MIT */\nfunction run() {}",
+    "/* @preserve attribution */\nfunction run() {}",
+    "class Example {\n  /*! Preserve this. */\n  run() {}\n}",
+    "// oxlint-disable-next-line no-debugger\ndebugger;",
+    "// @ts-expect-error: Intentionally invalid input.\nconst run: number = () => '';",
+    "// prettier-ignore\nconst run = () => {};",
+    "// oxfmt-ignore\nfunction run( ) { return  1; }",
+    "/* oxfmt-ignore */\nclass Value { static run( ) { return  1; } }",
+    "// Keep the layout.\n// oxfmt-ignore\nconst run = () =>  1;",
+    "/* node:coverage ignore next */\nfunction unused() {}",
+    "/* global SDK */\nfunction run() { return SDK; }",
+    "/* globals SDK */\nfunction run() { return SDK; }",
+    "/* exported api */\nfunction api() {}",
+    "// Do not embed */ in a generated block.\nfunction run() {}",
+    "const object = {\n  // Property explanation.\n  value: 1,\n};",
+    "// Detached heading.\n\nfunction run() {}",
+    "/// <reference types='node' />\nfunction run() {}",
+    "/// <amd-module name='example' />\nfunction run() {}",
+  ],
+  invalid: [
+    {
+      code: "// globalThis provides shared state.\nfunction state() { return globalThis; }",
+      output: "/** globalThis provides shared state. */\nfunction state() { return globalThis; }",
+      errors: 1,
+    },
+    {
+      code: "// See https://example.com\nfunction run() {}",
+      output: "/** See https://example.com */\nfunction run() {}",
+      errors: 1,
+    },
+    {
+      code: "// Input/output mapping.\nfunction run() {}",
+      output: "/** Input/output mapping. */\nfunction run() {}",
+      errors: 1,
+    },
+    {
+      code: "// /api/users endpoint.\nfunction run() {}",
+      output: "/** /api/users endpoint. */\nfunction run() {}",
+      errors: 1,
+    },
+    {
+      code: "/*/api endpoint */\nfunction run() {}",
+      output: "/** /api endpoint */\nfunction run() {}",
+      errors: 1,
+    },
+    {
+      code: "/*/api endpoint\n  Details. */\nclass Service {}",
+      output: "/** /api endpoint\n  Details. */\nclass Service {}",
+      errors: 1,
+    },
+    {
+      code: "/* /api/users endpoint. */\nfunction run() {}",
+      output: "/** /api/users endpoint. */\nfunction run() {}",
+      errors: 1,
+    },
+    {
+      code: "// User-facing name.\nexport const name = () => 'Kim';",
+      output: "/** User-facing name. */\nexport const name = () => 'Kim';",
+      errors: 1,
+    },
+    {
+      code: "/* User-facing name. */\nconst name = function () { return 'Kim'; };",
+      output: "/** User-facing name. */\nconst name = function () { return 'Kim'; };",
+      errors: 1,
+    },
+    {
+      code: "/* ! Ordinary explanation. */\nfunction run() {}",
+      output: "/** ! Ordinary explanation. */\nfunction run() {}",
+      errors: 1,
+    },
+    {
+      code: "// First line.\n// Second line.\nfunction run() {}",
+      output: "/**\n * First line.\n * Second line.\n */\nfunction run() {}",
+      errors: 1,
+    },
+    {
+      code: "class User {\n  // User-facing name.\n  name() { return ''; }\n}",
+      output: "class User {\n  /** User-facing name. */\n  name() { return ''; }\n}",
+      errors: 1,
+    },
+    {
+      code: "// User record.\nexport class User {}",
+      output: "/** User record. */\nexport class User {}",
+      errors: 1,
+    },
+    {
+      code: "// User record.\nconst User = class {};",
+      output: "/** User record. */\nconst User = class {};",
+      errors: 1,
+    },
+    {
+      code: "// Callback.\nconst run = (() => {}) satisfies Callback;",
+      output: "/** Callback. */\nconst run = (() => {}) satisfies Callback;",
+      errors: 1,
+    },
+    {
+      code: "class User {\n // Callback.\n run = () => {};\n}",
+      output: "class User {\n /** Callback. */\n run = () => {};\n}",
+      errors: 1,
+    },
+    {
+      code: "const service = {\n // Run.\n run() {},\n // Stop.\n stop: () => {},\n};",
+      output: "const service = {\n /** Run. */\n run() {},\n /** Stop. */\n stop: () => {},\n};",
+      errors: 2,
+    },
+    {
+      code: "// Run.\nexport default () => {};",
+      output: "/** Run. */\nexport default () => {};",
+      errors: 1,
+    },
+    {
+      code: "interface Service {\n // Run.\n run(): void;\n}",
+      output: "interface Service {\n /** Run. */\n run(): void;\n}",
+      errors: 1,
+    },
+    {
+      code: "// Run.\ndeclare function run(): void;",
+      output: "/** Run. */\ndeclare function run(): void;",
+      errors: 1,
+    },
+  ],
+} satisfies RuleTester.TestCases;
+
+tester.run("prefer-jsdoc", plugin.rules["prefer-jsdoc"]!, cases);

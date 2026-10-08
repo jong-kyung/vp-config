@@ -1,0 +1,930 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`prefer-jsdoc CLI snapshots > invalid: /* ! Ordinary explanation. */
+function run() {} 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 30,
+          "endLine": 1,
+          "startColumn": 1,
+          "startLine": 1,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "/** ! Ordinary explanation. */
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: /* /api/users endpoint. */
+function run() {} 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 27,
+          "endLine": 1,
+          "startColumn": 1,
+          "startLine": 1,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "/** /api/users endpoint. */
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: /* User-facing name. */
+const name = function () { return 'Kim'; }; 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 24,
+          "endLine": 1,
+          "startColumn": 1,
+          "startLine": 1,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "/** User-facing name. */
+const name = function () { return 'Kim'; };",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: /*/api endpoint
+  Details. */
+class Service {} 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 14,
+          "endLine": 2,
+          "startColumn": 1,
+          "startLine": 1,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "/** /api endpoint
+  Details. */
+class Service {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: /*/api endpoint */
+function run() {} 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 19,
+          "endLine": 1,
+          "startColumn": 1,
+          "startLine": 1,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "/** /api endpoint */
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // /api/users endpoint.
+function run() {} 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 24,
+          "endLine": 1,
+          "startColumn": 1,
+          "startLine": 1,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "/** /api/users endpoint. */
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // Callback.
+const run = (() => {}) satisfies Callback; 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 13,
+          "endLine": 1,
+          "startColumn": 1,
+          "startLine": 1,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "/** Callback. */
+const run = (() => {}) satisfies Callback;",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // First line.
+// Second line.
+function run() {} 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 15,
+          "endLine": 1,
+          "startColumn": 1,
+          "startLine": 1,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "/**
+ * First line.
+ * Second line.
+ */
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // Input/output mapping.
+function run() {} 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 25,
+          "endLine": 1,
+          "startColumn": 1,
+          "startLine": 1,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "/** Input/output mapping. */
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // Run.
+declare function run(): void; 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 8,
+          "endLine": 1,
+          "startColumn": 1,
+          "startLine": 1,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "/** Run. */
+declare function run(): void;",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // Run.
+export default () => {}; 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 8,
+          "endLine": 1,
+          "startColumn": 1,
+          "startLine": 1,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "/** Run. */
+export default () => {};",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // See https://example.com
+function run() {} 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 27,
+          "endLine": 1,
+          "startColumn": 1,
+          "startLine": 1,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "/** See https://example.com */
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // User record.
+const User = class {}; 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 16,
+          "endLine": 1,
+          "startColumn": 1,
+          "startLine": 1,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "/** User record. */
+const User = class {};",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // User record.
+export class User {} 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 16,
+          "endLine": 1,
+          "startColumn": 1,
+          "startLine": 1,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "/** User record. */
+export class User {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // User-facing name.
+export const name = () => 'Kim'; 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 21,
+          "endLine": 1,
+          "startColumn": 1,
+          "startLine": 1,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "/** User-facing name. */
+export const name = () => 'Kim';",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // globalThis provides shared state.
+function state() { return globalThis; } 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 37,
+          "endLine": 1,
+          "startColumn": 1,
+          "startLine": 1,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "/** globalThis provides shared state. */
+function state() { return globalThis; }",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: class User {
+  // User-facing name.
+  name() { return ''; }
+} 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 23,
+          "endLine": 2,
+          "startColumn": 3,
+          "startLine": 2,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "class User {
+  /** User-facing name. */
+  name() { return ''; }
+}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: class User {
+ // Callback.
+ run = () => {};
+} 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 14,
+          "endLine": 2,
+          "startColumn": 2,
+          "startLine": 2,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "class User {
+ /** Callback. */
+ run = () => {};
+}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: const service = {
+ // Run.
+ run() {},
+ // Stop.
+ stop: () => {},
+}; 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 9,
+          "endLine": 2,
+          "startColumn": 2,
+          "startLine": 2,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+    {
+      "locations": [
+        {
+          "endColumn": 10,
+          "endLine": 4,
+          "startColumn": 2,
+          "startLine": 4,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "const service = {
+ /** Run. */
+ run() {},
+ /** Stop. */
+ stop: () => {},
+};",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: interface Service {
+ // Run.
+ run(): void;
+} 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 9,
+          "endLine": 2,
+          "startColumn": 2,
+          "startLine": 2,
+        },
+      ],
+      "message": "Use JSDoc for this existing function or class comment.",
+      "ruleId": "jong-kyung(prefer-jsdoc)",
+      "severity": "error",
+    },
+  ],
+  "output": "interface Service {
+ /** Run. */
+ run(): void;
+}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /* */
+function run() {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "/* */
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /* @license MIT */
+function run() {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "/* @license MIT */
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /* @preserve attribution */
+function run() {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "/* @preserve attribution */
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /* User-facing name. */
+const name = 'Kim'; 1`] = `
+{
+  "diagnostics": [],
+  "output": "/* User-facing name. */
+const name = 'Kim';",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /* exported api */
+function api() {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "/* exported api */
+function api() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /* global SDK */
+function run() { return SDK; } 1`] = `
+{
+  "diagnostics": [],
+  "output": "/* global SDK */
+function run() { return SDK; }",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /* globals SDK */
+function run() { return SDK; } 1`] = `
+{
+  "diagnostics": [],
+  "output": "/* globals SDK */
+function run() { return SDK; }",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /* node:coverage ignore next */
+function unused() {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "/* node:coverage ignore next */
+function unused() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /* oxfmt-ignore */
+class Value { static run( ) { return  1; } } 1`] = `
+{
+  "diagnostics": [],
+  "output": "/* oxfmt-ignore */
+class Value { static run( ) { return  1; } }",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /*! Copyright Example */
+
+function run() {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "/*! Copyright Example */
+
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /*! Copyright Example */
+// Details.
+function run() {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "/*! Copyright Example */
+// Details.
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /*! Copyright Example */
+const value = 1; 1`] = `
+{
+  "diagnostics": [],
+  "output": "/*! Copyright Example */
+const value = 1;",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /*! Copyright Example */
+export function run() {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "/*! Copyright Example */
+export function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /*!\\r
+ * Copyright Example\\r
+ */\\r
+class Example {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "/*!
+ * Copyright Example
+ */
+class Example {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /** Callback. */
+const run = () => {}; 1`] = `
+{
+  "diagnostics": [],
+  "output": "/** Callback. */
+const run = () => {};",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /** Identifier contract. */
+type Id = string; 1`] = `
+{
+  "diagnostics": [],
+  "output": "/** Identifier contract. */
+type Id = string;",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /** Service. */
+const Service = class {}; 1`] = `
+{
+  "diagnostics": [],
+  "output": "/** Service. */
+const Service = class {};",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /** User contract. */
+interface User { /** Name. */ name: string; } 1`] = `
+{
+  "diagnostics": [],
+  "output": "/** User contract. */
+interface User { /** Name. */ name: string; }",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /** User-facing name. */
+const name = 'Kim'; 1`] = `
+{
+  "diagnostics": [],
+  "output": "/** User-facing name. */
+const name = 'Kim';",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: //
+function run() {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "//
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: // @ts-expect-error: Intentionally invalid input.
+const run: number = () => ''; 1`] = `
+{
+  "diagnostics": [],
+  "output": "// @ts-expect-error: Intentionally invalid input.
+const run: number = () => '';",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: // Available states.
+enum State { Ready } 1`] = `
+{
+  "diagnostics": [],
+  "output": "// Available states.
+enum State { Ready }",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: // Call signature.
+type Callback = () => void; 1`] = `
+{
+  "diagnostics": [],
+  "output": "// Call signature.
+type Callback = () => void;",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: // Detached heading.
+
+function run() {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "// Detached heading.
+
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: // Do not embed */ in a generated block.
+function run() {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "// Do not embed */ in a generated block.
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: // Identifier contract.
+type Id = string; 1`] = `
+{
+  "diagnostics": [],
+  "output": "// Identifier contract.
+type Id = string;",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: // Keep the layout.
+// oxfmt-ignore
+const run = () =>  1; 1`] = `
+{
+  "diagnostics": [],
+  "output": "// Keep the layout.
+// oxfmt-ignore
+const run = () =>  1;",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: // Loaded value.
+const value = load(); 1`] = `
+{
+  "diagnostics": [],
+  "output": "// Loaded value.
+const value = load();",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: // SAFETY: The parser validated this identifier.
+const id = value as Id; 1`] = `
+{
+  "diagnostics": [],
+  "output": "// SAFETY: The parser validated this identifier.
+const id = value as Id;",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: // Shared declarations.
+const value = 1, run = () => {}; 1`] = `
+{
+  "diagnostics": [],
+  "output": "// Shared declarations.
+const value = 1, run = () => {};",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: // Stored callback.
+const callback = run; 1`] = `
+{
+  "diagnostics": [],
+  "output": "// Stored callback.
+const callback = run;",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: // User contract.
+interface User {
+ // Name.
+ name: string;
+} 1`] = `
+{
+  "diagnostics": [],
+  "output": "// User contract.
+interface User {
+ // Name.
+ name: string;
+}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: // User-facing name.
+export const name = 'Kim'; 1`] = `
+{
+  "diagnostics": [],
+  "output": "// User-facing name.
+export const name = 'Kim';",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: // oxfmt-ignore
+function run( ) { return  1; } 1`] = `
+{
+  "diagnostics": [],
+  "output": "// oxfmt-ignore
+function run( ) { return  1; }",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: // oxlint-disable-next-line no-debugger
+debugger; 1`] = `
+{
+  "diagnostics": [],
+  "output": "// oxlint-disable-next-line no-debugger
+debugger;",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: // prettier-ignore
+const run = () => {}; 1`] = `
+{
+  "diagnostics": [],
+  "output": "// prettier-ignore
+const run = () => {};",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /// <amd-module name='example' />
+function run() {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "/// <amd-module name='example' />
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: /// <reference types='node' />
+function run() {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "/// <reference types='node' />
+function run() {}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: class Example {
+  /*! Preserve this. */
+  run() {}
+} 1`] = `
+{
+  "diagnostics": [],
+  "output": "class Example {
+  /*! Preserve this. */
+  run() {}
+}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: class User {
+ /** User-facing name. */
+ name = '';
+} 1`] = `
+{
+  "diagnostics": [],
+  "output": "class User {
+ /** User-facing name. */
+ name = '';
+}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: class User {
+ // User-facing name.
+ name = '';
+ // Current value.
+ accessor value = 1;
+} 1`] = `
+{
+  "diagnostics": [],
+  "output": "class User {
+ // User-facing name.
+ name = '';
+ // Current value.
+ accessor value = 1;
+}",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: const object = {
+  // Property explanation.
+  value: 1,
+}; 1`] = `
+{
+  "diagnostics": [],
+  "output": "const object = {
+  // Property explanation.
+  value: 1,
+};",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: const value = 1; 1`] = `
+{
+  "diagnostics": [],
+  "output": "const value = 1;",
+}
+`;
+
+exports[`prefer-jsdoc CLI snapshots > valid: function run() {} class Example {} const callback = () => {}; 1`] = `
+{
+  "diagnostics": [],
+  "output": "function run() {} class Example {} const callback = () => {};",
+}
+`;

@@ -31,13 +31,13 @@ tester.run(
 
       return {
         FunctionDeclaration(node) {
-          expect(node.params.map(types.annotation).map((type) => type?.type)).toEqual([
-            "TSStringKeyword",
-          ]);
+          expect(node.params.map(types.annotation).map((type) => type?.type)).toMatchSnapshot(
+            "parameter annotations",
+          );
         },
         TSParameterProperty(node) {
           const { annotation } = types;
-          expect(annotation(node)?.type).toBe("TSStringKeyword");
+          expect(annotation(node)?.type).toMatchSnapshot("detached annotation method");
         },
       };
     },

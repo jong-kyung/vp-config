@@ -1,0 +1,162 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`no-runtime-typeof CLI snapshots > invalid: function isText(value: unknown): value is string { const test = () => typeof value; return true; } 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 83,
+          "endLine": 1,
+          "startColumn": 71,
+          "startLine": 1,
+        },
+      ],
+      "message": "Validate boundary values in a parser or an explicit type guard.",
+      "ruleId": "jong-kyung(no-runtime-typeof)",
+      "severity": "error",
+    },
+  ],
+  "output": "function isText(value: unknown): value is string { const test = () => typeof value; return true; }",
+}
+`;
+
+exports[`no-runtime-typeof CLI snapshots > invalid: function isText(value: unknown): value is string { return typeof value === 'string'; } 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 71,
+          "endLine": 1,
+          "startColumn": 59,
+          "startLine": 1,
+        },
+      ],
+      "message": "Validate boundary values in a parser or an explicit type guard.",
+      "ruleId": "jong-kyung(no-runtime-typeof)",
+      "severity": "error",
+    },
+  ],
+  "output": "function isText(value: unknown): value is string { return typeof value === 'string'; }",
+}
+`;
+
+exports[`no-runtime-typeof CLI snapshots > invalid: if (typeof value === 'string') {} 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 17,
+          "endLine": 1,
+          "startColumn": 5,
+          "startLine": 1,
+        },
+      ],
+      "message": "Validate boundary values in a parser or an explicit type guard.",
+      "ruleId": "jong-kyung(no-runtime-typeof)",
+      "severity": "error",
+    },
+  ],
+  "output": "if (typeof value === 'string') {}",
+}
+`;
+
+exports[`no-runtime-typeof CLI snapshots > invalid: if (typeof value === \`string\`) {} 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 17,
+          "endLine": 1,
+          "startColumn": 5,
+          "startLine": 1,
+        },
+      ],
+      "message": "Validate boundary values in a parser or an explicit type guard.",
+      "ruleId": "jong-kyung(no-runtime-typeof)",
+      "severity": "error",
+    },
+  ],
+  "output": "if (typeof value === \`string\`) {}",
+}
+`;
+
+exports[`no-runtime-typeof CLI snapshots > invalid: if (typeof window !== \`un\${part}\`) {} 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 18,
+          "endLine": 1,
+          "startColumn": 5,
+          "startLine": 1,
+        },
+      ],
+      "message": "Validate boundary values in a parser or an explicit type guard.",
+      "ruleId": "jong-kyung(no-runtime-typeof)",
+      "severity": "error",
+    },
+  ],
+  "output": "if (typeof window !== \`un\${part}\`) {}",
+}
+`;
+
+exports[`no-runtime-typeof CLI snapshots > invalid: if (typeof window !== undefined) {} 1`] = `
+{
+  "diagnostics": [
+    {
+      "locations": [
+        {
+          "endColumn": 18,
+          "endLine": 1,
+          "startColumn": 5,
+          "startLine": 1,
+        },
+      ],
+      "message": "Validate boundary values in a parser or an explicit type guard.",
+      "ruleId": "jong-kyung(no-runtime-typeof)",
+      "severity": "error",
+    },
+  ],
+  "output": "if (typeof window !== undefined) {}",
+}
+`;
+
+exports[`no-runtime-typeof CLI snapshots > valid: function isText(value: unknown): value is string { return typeof value === 'string'; } 1`] = `
+{
+  "diagnostics": [],
+  "output": "function isText(value: unknown): value is string { return typeof value === 'string'; }",
+}
+`;
+
+exports[`no-runtime-typeof CLI snapshots > valid: if (\`undefined\` === typeof window) {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "if (\`undefined\` === typeof window) {}",
+}
+`;
+
+exports[`no-runtime-typeof CLI snapshots > valid: if (typeof window !== 'undefined') {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "if (typeof window !== 'undefined') {}",
+}
+`;
+
+exports[`no-runtime-typeof CLI snapshots > valid: if (typeof window !== \`undefined\`) {} 1`] = `
+{
+  "diagnostics": [],
+  "output": "if (typeof window !== \`undefined\`) {}",
+}
+`;
+
+exports[`no-runtime-typeof CLI snapshots > valid: type T = typeof value; 1`] = `
+{
+  "diagnostics": [],
+  "output": "type T = typeof value;",
+}
+`;

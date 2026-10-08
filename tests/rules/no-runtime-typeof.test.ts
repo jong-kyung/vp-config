@@ -1,6 +1,7 @@
 import type { RuleTester } from "vite-plus/lint/plugins-dev";
 import plugin from "../../src/plugin.ts";
 import { tester } from "../helpers/rule-tester.ts";
+import { snapshotCliRule } from "../helpers/cli-snapshots.ts";
 
 const cases = {
   valid: [
@@ -31,3 +32,4 @@ const cases = {
 } satisfies RuleTester.TestCases;
 
 tester.run("no-runtime-typeof", plugin.rules["no-runtime-typeof"]!, cases);
+snapshotCliRule("no-runtime-typeof", cases);

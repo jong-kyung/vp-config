@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`shared analysis methods > valid > function run(value: string = '') {} class State { constructor(public value: string = '') {} } > detached annotation method 1`] = `"TSStringKeyword"`;
+
+exports[`shared analysis methods > valid > function run(value: string = '') {} class State { constructor(public value: string = '') {} } > parameter annotations 1`] = `
+[
+  "TSStringKeyword",
+]
+`;

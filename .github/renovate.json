@@ -1,0 +1,50 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":timezone(Asia/Seoul)",
+    "helpers:pinGitHubActionDigestsToSemver"
+  ],
+  "schedule": ["before 9am on monday"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "labels": ["dependencies"],
+  "rangeStrategy": "bump",
+  "minimumReleaseAge": "3 days",
+  "automerge": false,
+  "postUpdateOptions": ["pnpmDedupe"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 9am on monday"]
+  },
+  "packageRules": [
+    {
+      "matchPackageNames": ["node"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "groupName": "github-actions",
+      "matchManagers": ["github-actions"]
+    },
+    {
+      "groupName": "npm devDependencies (non-major)",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["devDependencies", "pnpm.catalog.*"],
+      "matchUpdateTypes": ["patch", "minor"]
+    },
+    {
+      "groupName": "pnpm package manager",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["devEngines.packageManager"],
+      "matchPackageNames": ["pnpm"],
+      "schedule": ["before 10am on the first day of the month"]
+    },
+    {
+      "groupName": "vite-plus",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["vite-plus", "@voidzero-dev/vite-plus-*"]
+    }
+  ]
+}

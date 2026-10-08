@@ -1,5 +1,7 @@
 catalog:
   "@types/node": ^26.1.1
+  jscpd: 5.2.0
+  knip: 6.35.1
   typescript: ^7.0.2
   vite: npm:@voidzero-dev/vite-plus-core@1.0.0
   vite-plus: 1.0.0

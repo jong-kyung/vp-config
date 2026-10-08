@@ -1,3 +1,25 @@
+# Project guidance
+
+This package provides shared Vite+ presets and custom lint rules. Its public presets are `nodeConfig` and `libConfig`.
+
+## Code layout
+
+- `src/index.ts` defines the presets and custom rule settings. `src/native.ts` defines native lint settings.
+- `src/plugin.ts` exports the custom plugin. Rule implementations live in `src/rules/` and share helpers in `src/analysis/`.
+- `tests/` contains rule regression tests and packed-consumer integration tests.
+
+## Rule changes
+
+- Preserve rule registration, severities, and options when refactoring.
+- Keep type and array analysis within its existing local-analysis boundaries.
+- Keep JSDoc fixes limited to existing function and class explanations. Preserve directives and attached comments.
+- Preserve the assertion safety-comment policy and the `as const` exemption.
+- Add focused regression cases for changed rule behavior. Use native Vite+ configuration and `mergeConfig` rather than introducing custom configuration helpers.
+
+## Documentation and validation
+
+Keep package usage and custom rule guidance in `README.md`. Keep development and CI instructions in `CONTRIBUTING.md`, and follow its validation commands before committing.
+
 <!--VITE PLUS START-->
 
 # Using Vite+, the Unified Toolchain for the Web

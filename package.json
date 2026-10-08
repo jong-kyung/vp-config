@@ -35,10 +35,14 @@
     "dev": "vp pack --watch",
     "test": "vp test",
     "check": "vp check",
+    "knip": "knip",
+    "duplication": "jscpd src --min-tokens 50 --min-lines 5 --fail-on-new-clones",
     "prepublishOnly": "vp run build"
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "jscpd": "catalog:",
+    "knip": "catalog:",
     "typescript": "catalog:",
     "vite-plus": "catalog:"
   },

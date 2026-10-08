@@ -1,431 +1,349 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`prefer-jsdoc CLI snapshots > invalid: /* ! Ordinary explanation. */
-function run() {} 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 30,
-          "endLine": 1,
-          "startColumn": 1,
-          "startLine": 1,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "/** ! Ordinary explanation. */
-function run() {}",
-}
+function run() {} > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:1:1]
+ 1 | /* ! Ordinary explanation. */
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 2 | function run() {}
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: /* ! Ordinary explanation. */
+function run() {} > fixed code 1`] = `
+"/** ! Ordinary explanation. */
+function run() {}"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: /* /api/users endpoint. */
-function run() {} 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 27,
-          "endLine": 1,
-          "startColumn": 1,
-          "startLine": 1,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "/** /api/users endpoint. */
-function run() {}",
-}
+function run() {} > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:1:1]
+ 1 | /* /api/users endpoint. */
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 2 | function run() {}
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: /* /api/users endpoint. */
+function run() {} > fixed code 1`] = `
+"/** /api/users endpoint. */
+function run() {}"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: /* User-facing name. */
-const name = function () { return 'Kim'; }; 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 24,
-          "endLine": 1,
-          "startColumn": 1,
-          "startLine": 1,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "/** User-facing name. */
-const name = function () { return 'Kim'; };",
-}
+const name = function () { return 'Kim'; }; > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:1:1]
+ 1 | /* User-facing name. */
+   : ^^^^^^^^^^^^^^^^^^^^^^^
+ 2 | const name = function () { return 'Kim'; };
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: /* User-facing name. */
+const name = function () { return 'Kim'; }; > fixed code 1`] = `
+"/** User-facing name. */
+const name = function () { return 'Kim'; };"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: /*/api endpoint
   Details. */
-class Service {} 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 14,
-          "endLine": 2,
-          "startColumn": 1,
-          "startLine": 1,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "/** /api endpoint
+class Service {} > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:1:1]
+ 1 | ,-> /*/api endpoint
+ 2 | \`->   Details. */
+ 3 |     class Service {}
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: /*/api endpoint
   Details. */
-class Service {}",
-}
+class Service {} > fixed code 1`] = `
+"/** /api endpoint
+  Details. */
+class Service {}"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: /*/api endpoint */
-function run() {} 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 19,
-          "endLine": 1,
-          "startColumn": 1,
-          "startLine": 1,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "/** /api endpoint */
-function run() {}",
-}
+function run() {} > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:1:1]
+ 1 | /*/api endpoint */
+   : ^^^^^^^^^^^^^^^^^^
+ 2 | function run() {}
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: /*/api endpoint */
+function run() {} > fixed code 1`] = `
+"/** /api endpoint */
+function run() {}"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: // /api/users endpoint.
-function run() {} 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 24,
-          "endLine": 1,
-          "startColumn": 1,
-          "startLine": 1,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "/** /api/users endpoint. */
-function run() {}",
-}
+function run() {} > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:1:1]
+ 1 | // /api/users endpoint.
+   : ^^^^^^^^^^^^^^^^^^^^^^^
+ 2 | function run() {}
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // /api/users endpoint.
+function run() {} > fixed code 1`] = `
+"/** /api/users endpoint. */
+function run() {}"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: // Callback.
-const run = (() => {}) satisfies Callback; 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 13,
-          "endLine": 1,
-          "startColumn": 1,
-          "startLine": 1,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "/** Callback. */
-const run = (() => {}) satisfies Callback;",
-}
+const run = (() => {}) satisfies Callback; > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:1:1]
+ 1 | // Callback.
+   : ^^^^^^^^^^^^
+ 2 | const run = (() => {}) satisfies Callback;
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // Callback.
+const run = (() => {}) satisfies Callback; > fixed code 1`] = `
+"/** Callback. */
+const run = (() => {}) satisfies Callback;"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: // First line.
 // Second line.
-function run() {} 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 15,
-          "endLine": 1,
-          "startColumn": 1,
-          "startLine": 1,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "/**
+function run() {} > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:1:1]
+ 1 | // First line.
+   : ^^^^^^^^^^^^^^
+ 2 | // Second line.
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // First line.
+// Second line.
+function run() {} > fixed code 1`] = `
+"/**
  * First line.
  * Second line.
  */
-function run() {}",
-}
+function run() {}"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: // Input/output mapping.
-function run() {} 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 25,
-          "endLine": 1,
-          "startColumn": 1,
-          "startLine": 1,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "/** Input/output mapping. */
-function run() {}",
-}
+function run() {} > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:1:1]
+ 1 | // Input/output mapping.
+   : ^^^^^^^^^^^^^^^^^^^^^^^^
+ 2 | function run() {}
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // Input/output mapping.
+function run() {} > fixed code 1`] = `
+"/** Input/output mapping. */
+function run() {}"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: // Run.
-declare function run(): void; 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 8,
-          "endLine": 1,
-          "startColumn": 1,
-          "startLine": 1,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "/** Run. */
-declare function run(): void;",
-}
+declare function run(): void; > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:1:1]
+ 1 | // Run.
+   : ^^^^^^^
+ 2 | declare function run(): void;
+   \`----
+
+Found 0 warnings and 1 error."
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: // Run.
-export default () => {}; 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 8,
-          "endLine": 1,
-          "startColumn": 1,
-          "startLine": 1,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "/** Run. */
-export default () => {};",
-}
+declare function run(): void; > fixed code 1`] = `
+"/** Run. */
+declare function run(): void;"
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // Run.
+export default () => {}; > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:1:1]
+ 1 | // Run.
+   : ^^^^^^^
+ 2 | export default () => {};
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // Run.
+export default () => {}; > fixed code 1`] = `
+"/** Run. */
+export default () => {};"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: // See https://example.com
-function run() {} 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 27,
-          "endLine": 1,
-          "startColumn": 1,
-          "startLine": 1,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "/** See https://example.com */
-function run() {}",
-}
+function run() {} > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:1:1]
+ 1 | // See https://example.com
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 2 | function run() {}
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // See https://example.com
+function run() {} > fixed code 1`] = `
+"/** See https://example.com */
+function run() {}"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: // User record.
-const User = class {}; 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 16,
-          "endLine": 1,
-          "startColumn": 1,
-          "startLine": 1,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "/** User record. */
-const User = class {};",
-}
+const User = class {}; > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:1:1]
+ 1 | // User record.
+   : ^^^^^^^^^^^^^^^
+ 2 | const User = class {};
+   \`----
+
+Found 0 warnings and 1 error."
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: // User record.
-export class User {} 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 16,
-          "endLine": 1,
-          "startColumn": 1,
-          "startLine": 1,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "/** User record. */
-export class User {}",
-}
+const User = class {}; > fixed code 1`] = `
+"/** User record. */
+const User = class {};"
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // User record.
+export class User {} > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:1:1]
+ 1 | // User record.
+   : ^^^^^^^^^^^^^^^
+ 2 | export class User {}
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // User record.
+export class User {} > fixed code 1`] = `
+"/** User record. */
+export class User {}"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: // User-facing name.
-export const name = () => 'Kim'; 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 21,
-          "endLine": 1,
-          "startColumn": 1,
-          "startLine": 1,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "/** User-facing name. */
-export const name = () => 'Kim';",
-}
+export const name = () => 'Kim'; > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:1:1]
+ 1 | // User-facing name.
+   : ^^^^^^^^^^^^^^^^^^^^
+ 2 | export const name = () => 'Kim';
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // User-facing name.
+export const name = () => 'Kim'; > fixed code 1`] = `
+"/** User-facing name. */
+export const name = () => 'Kim';"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: // globalThis provides shared state.
-function state() { return globalThis; } 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 37,
-          "endLine": 1,
-          "startColumn": 1,
-          "startLine": 1,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "/** globalThis provides shared state. */
-function state() { return globalThis; }",
-}
+function state() { return globalThis; } > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:1:1]
+ 1 | // globalThis provides shared state.
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 2 | function state() { return globalThis; }
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: // globalThis provides shared state.
+function state() { return globalThis; } > fixed code 1`] = `
+"/** globalThis provides shared state. */
+function state() { return globalThis; }"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: class User {
   // User-facing name.
   name() { return ''; }
-} 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 23,
-          "endLine": 2,
-          "startColumn": 3,
-          "startLine": 2,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "class User {
+} > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:2:3]
+ 1 | class User {
+ 2 |   // User-facing name.
+   :   ^^^^^^^^^^^^^^^^^^^^
+ 3 |   name() { return ''; }
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: class User {
+  // User-facing name.
+  name() { return ''; }
+} > fixed code 1`] = `
+"class User {
   /** User-facing name. */
   name() { return ''; }
-}",
-}
+}"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: class User {
  // Callback.
  run = () => {};
-} 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 14,
-          "endLine": 2,
-          "startColumn": 2,
-          "startLine": 2,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "class User {
+} > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:2:2]
+ 1 | class User {
+ 2 |  // Callback.
+   :  ^^^^^^^^^^^^
+ 3 |  run = () => {};
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: class User {
+ // Callback.
+ run = () => {};
+} > fixed code 1`] = `
+"class User {
  /** Callback. */
  run = () => {};
-}",
-}
+}"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: const service = {
@@ -433,498 +351,210 @@ exports[`prefer-jsdoc CLI snapshots > invalid: const service = {
  run() {},
  // Stop.
  stop: () => {},
-}; 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 9,
-          "endLine": 2,
-          "startColumn": 2,
-          "startLine": 2,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-    {
-      "locations": [
-        {
-          "endColumn": 10,
-          "endLine": 4,
-          "startColumn": 2,
-          "startLine": 4,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "const service = {
+}; > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:2:2]
+ 1 | const service = {
+ 2 |  // Run.
+   :  ^^^^^^^
+ 3 |  run() {},
+   \`----
+
+  x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:4:2]
+ 3 |  run() {},
+ 4 |  // Stop.
+   :  ^^^^^^^^
+ 5 |  stop: () => {},
+   \`----
+
+Found 0 warnings and 2 errors."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: const service = {
+ // Run.
+ run() {},
+ // Stop.
+ stop: () => {},
+}; > fixed code 1`] = `
+"const service = {
  /** Run. */
  run() {},
  /** Stop. */
  stop: () => {},
-};",
-}
+};"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > invalid: interface Service {
  // Run.
  run(): void;
-} 1`] = `
-{
-  "diagnostics": [
-    {
-      "locations": [
-        {
-          "endColumn": 9,
-          "endLine": 2,
-          "startColumn": 2,
-          "startLine": 2,
-        },
-      ],
-      "message": "Use JSDoc for this existing function or class comment.",
-      "ruleId": "jong-kyung(prefer-jsdoc)",
-      "severity": "error",
-    },
-  ],
-  "output": "interface Service {
+} > diagnostics 1`] = `
+"x jong-kyung(prefer-jsdoc): Use JSDoc for this existing function or class comment.
+   ,-[case.ts:2:2]
+ 1 | interface Service {
+ 2 |  // Run.
+   :  ^^^^^^^
+ 3 |  run(): void;
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`prefer-jsdoc CLI snapshots > invalid: interface Service {
+ // Run.
+ run(): void;
+} > fixed code 1`] = `
+"interface Service {
  /** Run. */
  run(): void;
-}",
-}
+}"
 `;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /* */
-function run() {} 1`] = `
-{
-  "diagnostics": [],
-  "output": "/* */
-function run() {}",
-}
-`;
+function run() {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /* @license MIT */
-function run() {} 1`] = `
-{
-  "diagnostics": [],
-  "output": "/* @license MIT */
-function run() {}",
-}
-`;
+function run() {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /* @preserve attribution */
-function run() {} 1`] = `
-{
-  "diagnostics": [],
-  "output": "/* @preserve attribution */
-function run() {}",
-}
-`;
+function run() {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /* User-facing name. */
-const name = 'Kim'; 1`] = `
-{
-  "diagnostics": [],
-  "output": "/* User-facing name. */
-const name = 'Kim';",
-}
-`;
+const name = 'Kim'; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /* exported api */
-function api() {} 1`] = `
-{
-  "diagnostics": [],
-  "output": "/* exported api */
-function api() {}",
-}
-`;
+function api() {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /* global SDK */
-function run() { return SDK; } 1`] = `
-{
-  "diagnostics": [],
-  "output": "/* global SDK */
-function run() { return SDK; }",
-}
-`;
+function run() { return SDK; } > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /* globals SDK */
-function run() { return SDK; } 1`] = `
-{
-  "diagnostics": [],
-  "output": "/* globals SDK */
-function run() { return SDK; }",
-}
-`;
+function run() { return SDK; } > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /* node:coverage ignore next */
-function unused() {} 1`] = `
-{
-  "diagnostics": [],
-  "output": "/* node:coverage ignore next */
-function unused() {}",
-}
-`;
+function unused() {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /* oxfmt-ignore */
-class Value { static run( ) { return  1; } } 1`] = `
-{
-  "diagnostics": [],
-  "output": "/* oxfmt-ignore */
-class Value { static run( ) { return  1; } }",
-}
-`;
+class Value { static run( ) { return  1; } } > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /*! Copyright Example */
 
-function run() {} 1`] = `
-{
-  "diagnostics": [],
-  "output": "/*! Copyright Example */
-
-function run() {}",
-}
-`;
+function run() {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /*! Copyright Example */
 // Details.
-function run() {} 1`] = `
-{
-  "diagnostics": [],
-  "output": "/*! Copyright Example */
-// Details.
-function run() {}",
-}
-`;
+function run() {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /*! Copyright Example */
-const value = 1; 1`] = `
-{
-  "diagnostics": [],
-  "output": "/*! Copyright Example */
-const value = 1;",
-}
-`;
+const value = 1; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /*! Copyright Example */
-export function run() {} 1`] = `
-{
-  "diagnostics": [],
-  "output": "/*! Copyright Example */
-export function run() {}",
-}
-`;
+export function run() {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /*!\\r
  * Copyright Example\\r
  */\\r
-class Example {} 1`] = `
-{
-  "diagnostics": [],
-  "output": "/*!
- * Copyright Example
- */
-class Example {}",
-}
-`;
+class Example {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /** Callback. */
-const run = () => {}; 1`] = `
-{
-  "diagnostics": [],
-  "output": "/** Callback. */
-const run = () => {};",
-}
-`;
+const run = () => {}; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /** Identifier contract. */
-type Id = string; 1`] = `
-{
-  "diagnostics": [],
-  "output": "/** Identifier contract. */
-type Id = string;",
-}
-`;
+type Id = string; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /** Service. */
-const Service = class {}; 1`] = `
-{
-  "diagnostics": [],
-  "output": "/** Service. */
-const Service = class {};",
-}
-`;
+const Service = class {}; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /** User contract. */
-interface User { /** Name. */ name: string; } 1`] = `
-{
-  "diagnostics": [],
-  "output": "/** User contract. */
-interface User { /** Name. */ name: string; }",
-}
-`;
+interface User { /** Name. */ name: string; } > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /** User-facing name. */
-const name = 'Kim'; 1`] = `
-{
-  "diagnostics": [],
-  "output": "/** User-facing name. */
-const name = 'Kim';",
-}
-`;
+const name = 'Kim'; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: //
-function run() {} 1`] = `
-{
-  "diagnostics": [],
-  "output": "//
-function run() {}",
-}
-`;
+function run() {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: // @ts-expect-error: Intentionally invalid input.
-const run: number = () => ''; 1`] = `
-{
-  "diagnostics": [],
-  "output": "// @ts-expect-error: Intentionally invalid input.
-const run: number = () => '';",
-}
-`;
+const run: number = () => ''; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: // Available states.
-enum State { Ready } 1`] = `
-{
-  "diagnostics": [],
-  "output": "// Available states.
-enum State { Ready }",
-}
-`;
+enum State { Ready } > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: // Call signature.
-type Callback = () => void; 1`] = `
-{
-  "diagnostics": [],
-  "output": "// Call signature.
-type Callback = () => void;",
-}
-`;
+type Callback = () => void; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: // Detached heading.
 
-function run() {} 1`] = `
-{
-  "diagnostics": [],
-  "output": "// Detached heading.
-
-function run() {}",
-}
-`;
+function run() {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: // Do not embed */ in a generated block.
-function run() {} 1`] = `
-{
-  "diagnostics": [],
-  "output": "// Do not embed */ in a generated block.
-function run() {}",
-}
-`;
+function run() {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: // Identifier contract.
-type Id = string; 1`] = `
-{
-  "diagnostics": [],
-  "output": "// Identifier contract.
-type Id = string;",
-}
-`;
+type Id = string; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: // Keep the layout.
 // oxfmt-ignore
-const run = () =>  1; 1`] = `
-{
-  "diagnostics": [],
-  "output": "// Keep the layout.
-// oxfmt-ignore
-const run = () =>  1;",
-}
-`;
+const run = () =>  1; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: // Loaded value.
-const value = load(); 1`] = `
-{
-  "diagnostics": [],
-  "output": "// Loaded value.
-const value = load();",
-}
-`;
+const value = load(); > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: // SAFETY: The parser validated this identifier.
-const id = value as Id; 1`] = `
-{
-  "diagnostics": [],
-  "output": "// SAFETY: The parser validated this identifier.
-const id = value as Id;",
-}
-`;
+const id = value as Id; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: // Shared declarations.
-const value = 1, run = () => {}; 1`] = `
-{
-  "diagnostics": [],
-  "output": "// Shared declarations.
-const value = 1, run = () => {};",
-}
-`;
+const value = 1, run = () => {}; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: // Stored callback.
-const callback = run; 1`] = `
-{
-  "diagnostics": [],
-  "output": "// Stored callback.
-const callback = run;",
-}
-`;
+const callback = run; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: // User contract.
 interface User {
  // Name.
  name: string;
-} 1`] = `
-{
-  "diagnostics": [],
-  "output": "// User contract.
-interface User {
- // Name.
- name: string;
-}",
-}
-`;
+} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: // User-facing name.
-export const name = 'Kim'; 1`] = `
-{
-  "diagnostics": [],
-  "output": "// User-facing name.
-export const name = 'Kim';",
-}
-`;
+export const name = 'Kim'; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: // oxfmt-ignore
-function run( ) { return  1; } 1`] = `
-{
-  "diagnostics": [],
-  "output": "// oxfmt-ignore
-function run( ) { return  1; }",
-}
-`;
+function run( ) { return  1; } > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: // oxlint-disable-next-line no-debugger
-debugger; 1`] = `
-{
-  "diagnostics": [],
-  "output": "// oxlint-disable-next-line no-debugger
-debugger;",
-}
-`;
+debugger; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: // prettier-ignore
-const run = () => {}; 1`] = `
-{
-  "diagnostics": [],
-  "output": "// prettier-ignore
-const run = () => {};",
-}
-`;
+const run = () => {}; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /// <amd-module name='example' />
-function run() {} 1`] = `
-{
-  "diagnostics": [],
-  "output": "/// <amd-module name='example' />
-function run() {}",
-}
-`;
+function run() {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: /// <reference types='node' />
-function run() {} 1`] = `
-{
-  "diagnostics": [],
-  "output": "/// <reference types='node' />
-function run() {}",
-}
-`;
+function run() {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: class Example {
   /*! Preserve this. */
   run() {}
-} 1`] = `
-{
-  "diagnostics": [],
-  "output": "class Example {
-  /*! Preserve this. */
-  run() {}
-}",
-}
-`;
+} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: class User {
  /** User-facing name. */
  name = '';
-} 1`] = `
-{
-  "diagnostics": [],
-  "output": "class User {
- /** User-facing name. */
- name = '';
-}",
-}
-`;
+} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: class User {
  // User-facing name.
  name = '';
  // Current value.
  accessor value = 1;
-} 1`] = `
-{
-  "diagnostics": [],
-  "output": "class User {
- // User-facing name.
- name = '';
- // Current value.
- accessor value = 1;
-}",
-}
-`;
+} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
 exports[`prefer-jsdoc CLI snapshots > valid: const object = {
   // Property explanation.
   value: 1,
-}; 1`] = `
-{
-  "diagnostics": [],
-  "output": "const object = {
-  // Property explanation.
-  value: 1,
-};",
-}
-`;
+}; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
-exports[`prefer-jsdoc CLI snapshots > valid: const value = 1; 1`] = `
-{
-  "diagnostics": [],
-  "output": "const value = 1;",
-}
-`;
+exports[`prefer-jsdoc CLI snapshots > valid: const value = 1; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
 
-exports[`prefer-jsdoc CLI snapshots > valid: function run() {} class Example {} const callback = () => {}; 1`] = `
-{
-  "diagnostics": [],
-  "output": "function run() {} class Example {} const callback = () => {};",
-}
-`;
+exports[`prefer-jsdoc CLI snapshots > valid: function run() {} class Example {} const callback = () => {}; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;

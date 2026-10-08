@@ -13,54 +13,41 @@ type CliCase = Pick<RuleTester.ValidTestCase, "code" | "name" | "options"> & {
   output?: string | null;
 };
 
-interface Diagnostic {
-  ruleId: string;
-  level: string;
-  message: { text: string };
-  locations: {
-    physicalLocation: {
-      artifactLocation: { uri: string };
-      region: { startLine: number; startColumn: number; endLine: number; endColumn: number };
-    };
-  }[];
-}
-
 function isSource(entry: string | CliCase): entry is string {
   return typeof entry === "string";
 }
 
-function lint(directory: string, filenames: string[], fix = false): Diagnostic[] {
+function lint(directory: string, filenames: string[], fix = false): string {
   const result = spawnSync(
     "vp",
     [
       "lint",
-      "--format=sarif",
+      "--format=default",
       "--threads=1",
       "--no-ignore",
       ...(fix ? ["--fix"] : []),
       ...filenames,
     ],
-    { cwd: directory, encoding: "utf8", timeout: 30_000, maxBuffer: 2_000_000 },
+    {
+      cwd: directory,
+      encoding: "utf8",
+      timeout: 30_000,
+      maxBuffer: 2_000_000,
+      // Oxlint forces a colored Unicode theme when CI is set, even with NO_COLOR.
+      // Only the lint subprocess uses this environment; the test runner keeps its CI behavior.
+      env: { ...process.env, CI: undefined, NO_COLOR: "1", FORCE_COLOR: "0" },
+    },
   );
 
   expect(result.error, result.stderr).toBeUndefined();
   expect(result.stderr).toBe("");
   expect([0, 1], result.stdout).toContain(result.status);
 
-  /** SAFETY: The installed Vite+ CLI emits SARIF; the envelope and each case's diagnostic contract are checked below. */
-  const report = JSON.parse(result.stdout) as {
-    version: string;
-    runs: { results: Diagnostic[]; columnKind?: string }[];
-  };
+  const output = result.stdout.replaceAll("\r\n", "\n");
+  const timing = /\n?Finished in [^\n]+\n?$/;
+  expect(output).toMatch(timing);
 
-  expect(report.version).toBe("2.1.0");
-  expect(report.runs).toHaveLength(1);
-  expect(Array.isArray(report.runs[0]!.results)).toBe(true);
-
-  if (report.runs[0]!.results.length > 0)
-    expect(report.runs[0]!.columnKind).toBe("unicodeCodePoints");
-
-  return report.runs[0]!.results;
+  return output.replace(timing, "").trim();
 }
 
 /** Compares the two pilot rules through the public CLI while retaining RuleTester as the oracle. */
@@ -79,7 +66,7 @@ export function snapshotCliRule(
 
     const filenames = fixtures.map(({ filename }) => filename);
     let directory: string;
-    let diagnostics: Diagnostic[];
+    let diagnostics: string[];
     let outputs: string[];
 
     beforeAll(() => {
@@ -107,13 +94,17 @@ export function snapshotCliRule(
         writeFileSync(join(directory, fixture.filename), fixture.code);
 
       // --fix reports only remaining diagnostics, so capture original diagnostics first.
-      diagnostics = lint(directory, filenames);
+      const validFiles = fixtures
+        .filter(({ kind }) => kind === "valid")
+        .map(({ filename }) => filename);
 
-      for (const diagnostic of diagnostics) {
-        expect(diagnostic.ruleId).toBe(`jong-kyung(${name})`);
-        expect(diagnostic.locations).toHaveLength(1);
-        expect(filenames).toContain(diagnostic.locations[0]!.physicalLocation.artifactLocation.uri);
-      }
+      const validDiagnostics = validFiles.length > 0 ? lint(directory, validFiles) : "";
+      // ponytail: one CLI render per invalid case. Use a public in-process reporter before expanding the pilot.
+      diagnostics = fixtures.map(({ kind, filename }) =>
+        kind === "valid"
+          ? validDiagnostics
+          : lint(directory, [filename]).replaceAll(`,-[${filename}:`, ",-[case.ts:"),
+      );
 
       lint(directory, filenames, true);
       outputs = fixtures.map(({ filename }) => readFileSync(join(directory, filename), "utf8"));
@@ -122,7 +113,7 @@ export function snapshotCliRule(
       for (const [index, fixture] of fixtures.entries()) {
         expect(readFileSync(join(directory, fixture.filename), "utf8")).toBe(outputs[index]);
       }
-    }, 30_000);
+    }, 120_000);
 
     afterAll(() => {
       if (directory) rmSync(directory, { recursive: true, force: true });
@@ -130,23 +121,19 @@ export function snapshotCliRule(
 
     for (const [index, fixture] of fixtures.entries()) {
       test(`${fixture.kind}: ${fixture.name ?? fixture.code.replaceAll("\r", "\\r")}`, () => {
-        const actual = diagnostics.filter(
-          (diagnostic) =>
-            diagnostic.locations[0]!.physicalLocation.artifactLocation.uri === fixture.filename,
-        );
+        const errors = fixture.errors ?? 0;
+        const actual = diagnostics[index]!;
 
         // Match RuleTester's counts and exact output, including unchanged code and CRLF bytes.
-        expect(actual).toHaveLength(fixture.errors ?? 0);
+        expect(actual).toContain(
+          `Found 0 warnings and ${errors} ${errors === 1 ? "error" : "errors"}.`,
+        );
+
+        if (errors > 0) expect(actual).toContain(`jong-kyung(${name})`);
         expect(outputs[index]).toBe(fixture.output ?? fixture.code);
-        expect({
-          diagnostics: actual.map(({ ruleId, level, message, locations }) => ({
-            ruleId,
-            severity: level,
-            message: message.text,
-            locations: locations.map(({ physicalLocation }) => physicalLocation.region),
-          })),
-          output: outputs[index],
-        }).toMatchSnapshot();
+        expect(actual).toMatchSnapshot("diagnostics");
+
+        if (fixture.output != null) expect(outputs[index]).toMatchSnapshot("fixed code");
       });
     }
   });

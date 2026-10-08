@@ -1,0 +1,71 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`no-runtime-typeof CLI snapshots > invalid: function isText(value: unknown): value is string { const test = () => typeof value; return true; } > diagnostics 1`] = `
+"x jong-kyung(no-runtime-typeof): Validate boundary values in a parser or an explicit type guard.
+   ,-[case.ts:1:71]
+ 1 | function isText(value: unknown): value is string { const test = () => typeof value; return true; }
+   :                                                                       ^^^^^^^^^^^^
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`no-runtime-typeof CLI snapshots > invalid: function isText(value: unknown): value is string { return typeof value === 'string'; } > diagnostics 1`] = `
+"x jong-kyung(no-runtime-typeof): Validate boundary values in a parser or an explicit type guard.
+   ,-[case.ts:1:59]
+ 1 | function isText(value: unknown): value is string { return typeof value === 'string'; }
+   :                                                           ^^^^^^^^^^^^
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`no-runtime-typeof CLI snapshots > invalid: if (typeof value === 'string') {} > diagnostics 1`] = `
+"x jong-kyung(no-runtime-typeof): Validate boundary values in a parser or an explicit type guard.
+   ,-[case.ts:1:5]
+ 1 | if (typeof value === 'string') {}
+   :     ^^^^^^^^^^^^
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`no-runtime-typeof CLI snapshots > invalid: if (typeof value === \`string\`) {} > diagnostics 1`] = `
+"x jong-kyung(no-runtime-typeof): Validate boundary values in a parser or an explicit type guard.
+   ,-[case.ts:1:5]
+ 1 | if (typeof value === \`string\`) {}
+   :     ^^^^^^^^^^^^
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`no-runtime-typeof CLI snapshots > invalid: if (typeof window !== \`un\${part}\`) {} > diagnostics 1`] = `
+"x jong-kyung(no-runtime-typeof): Validate boundary values in a parser or an explicit type guard.
+   ,-[case.ts:1:5]
+ 1 | if (typeof window !== \`un\${part}\`) {}
+   :     ^^^^^^^^^^^^^
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`no-runtime-typeof CLI snapshots > invalid: if (typeof window !== undefined) {} > diagnostics 1`] = `
+"x jong-kyung(no-runtime-typeof): Validate boundary values in a parser or an explicit type guard.
+   ,-[case.ts:1:5]
+ 1 | if (typeof window !== undefined) {}
+   :     ^^^^^^^^^^^^^
+   \`----
+
+Found 0 warnings and 1 error."
+`;
+
+exports[`no-runtime-typeof CLI snapshots > valid: function isText(value: unknown): value is string { return typeof value === 'string'; } > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
+
+exports[`no-runtime-typeof CLI snapshots > valid: if (\`undefined\` === typeof window) {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
+
+exports[`no-runtime-typeof CLI snapshots > valid: if (typeof window !== 'undefined') {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
+
+exports[`no-runtime-typeof CLI snapshots > valid: if (typeof window !== \`undefined\`) {} > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;
+
+exports[`no-runtime-typeof CLI snapshots > valid: type T = typeof value; > diagnostics 1`] = `"Found 0 warnings and 0 errors."`;

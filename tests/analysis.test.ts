@@ -1,13 +1,9 @@
-import { describe, expect, it } from "vite-plus/test";
+import { expect } from "vite-plus/test";
 import { defineRule } from "vite-plus/lint/plugins";
-import { RuleTester } from "vite-plus/lint/plugins-dev";
 import { TypeAnalysis } from "../src/analysis/type-analysis.ts";
 import { ArrayAnalysis } from "../src/analysis/array-analysis.ts";
 
-RuleTester.describe = describe;
-RuleTester.it = it;
-
-const tester = new RuleTester({ languageOptions: { parserOptions: { lang: "ts" } } });
+import { tester } from "./helpers/rule-tester.ts";
 
 tester.run(
   "shared analysis methods",
@@ -35,13 +31,13 @@ tester.run(
 
       return {
         FunctionDeclaration(node) {
-          expect(node.params.map(types.annotation).map((type) => type?.type)).toEqual([
-            "TSStringKeyword",
-          ]);
+          expect(node.params.map(types.annotation).map((type) => type?.type)).toMatchSnapshot(
+            "parameter annotations",
+          );
         },
         TSParameterProperty(node) {
           const { annotation } = types;
-          expect(annotation(node)?.type).toBe("TSStringKeyword");
+          expect(annotation(node)?.type).toMatchSnapshot("detached annotation method");
         },
       };
     },

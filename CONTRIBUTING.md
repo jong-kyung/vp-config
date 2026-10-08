@@ -26,7 +26,28 @@ vp run build
 
 Knip checks unused files, exports, and dependencies. The duplication command scans `src` against the supplied Git ref. Existing clones are allowed. New clones or an unavailable baseline fail the check. Tests are outside the duplication scope.
 
-Vitest discovers `tests/**/*.test.ts` through `vite.config.ts`. The consumer tests build and pack the package, install its tarball in a temporary project, and exercise configuration inheritance, lint diagnostics, type checking, fixes, library packaging, and partial staging. Consumer installation requires network access, uses the same Node version, disables lifecycle scripts, and permits a missing lockfile. It does not require a warm dependency cache.
+## Tests and snapshots
+
+Vitest discovers `tests/**/*.test.ts` through `vite.config.ts`. Each custom rule has a file in `tests/rules/`. Define its valid and invalid inputs once and run them with the shared RuleTester in `tests/helpers/rule-tester.ts`. Keep options, declaration filenames, local-analysis boundaries, directives, and exact line endings in regression cases. Remove a case only when its input, options, and verification purpose duplicate another case.
+
+Public preset settings, including native severities and options, are captured together in `tests/__snapshots__/index.test.ts.snap`. Only the checkout-specific plugin path is normalized. Keep explicit assertions for relationships such as plugin registration completeness, shared method identity, and unchanged output.
+
+The `no-runtime-typeof` and `prefer-jsdoc` suites also run the same inputs through the installed `vp lint` CLI. This is a limited snapshot pilot, not a replacement for RuleTester. Each suite writes its inputs to a temporary directory under `node_modules`, activates only the tested rule through native Vite+ overrides, and cleans up afterward. It does not build or install a consumer package and needs no network after dependency installation.
+
+Diagnostic snapshots contain Vite+'s default error output, including source lines, underlines, messages, and error counts. Each invalid case is rendered separately so no custom diagnostic parser or renderer is needed. Valid cases run together and share the expected zero-error summary. Color is disabled, line endings and the code-frame filename are normalized, and the variable timing footer is removed. The lint subprocess unsets `CI` to prevent Oxlint from forcing a different colored Unicode theme. The test runner keeps its CI behavior, including failing on missing or outdated snapshots. Expected fixes have separate source snapshots. All snapshots are external `.snap` files managed by the built-in `vp test` runner.
+
+Original diagnostics are collected before `--fix`, because that command reports only remaining issues. Fix passes are batched across the suite. Explicit comparisons against the shared RuleTester expectations preserve error counts, unchanged code, exact CRLF bytes, and fixed output. A second fix run must leave the output unchanged. CLI fixing may apply multiple passes, so it is compared with RuleTester's default single-pass expectation rather than assumed equivalent.
+
+Review snapshot diffs as behavior changes. Update only the affected suite after checking its inputs and intended results, then rerun without update mode:
+
+```bash
+vp test tests/rules/prefer-jsdoc.test.ts --update
+vp test tests/rules/prefer-jsdoc.test.ts
+```
+
+Keep the pilot limited to these two rules until diagnostic accuracy, repeatability, runtime, and maintenance cost have been evaluated. The CLI helper currently supports code, names, options, numeric error counts, and optional fixed output. Extend its contract explicitly before using cases with custom filenames, parser settings, or hooks.
+
+Packed-consumer installation, consumer library builds, type-checking integration, CLI exit-code policy, and Git staging behavior are no longer covered by the test suite. Configuration snapshots do not replace those integration checks.
 
 To inspect the package without publishing:
 

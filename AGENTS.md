@@ -6,7 +6,7 @@ This package provides shared Vite+ presets and custom lint rules. Its public pre
 
 - `src/index.ts` defines the presets and custom rule settings. `src/native.ts` defines native lint settings.
 - `src/plugin.ts` exports the custom plugin. Rule implementations live in `src/rules/` and share helpers in `src/analysis/`.
-- `tests/` contains rule regression tests and packed-consumer integration tests.
+- `tests/` contains per-rule RuleTester regressions, external configuration snapshots, and a CLI snapshot pilot for two rules.
 
 ## Rule changes
 

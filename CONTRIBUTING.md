@@ -58,6 +58,6 @@ vp pm pack --out /tmp/vp-config.tgz
 
 ## CI
 
-CI runs `vp check`, Knip, and Vitest on PRs, main pushes, manual runs, and Sundays at 02:00 UTC. Duplication checks run on PRs and main pushes.
+CI runs `vp check`, Knip, Vitest, and release-version checks on PRs, main pushes, manual runs, and Sundays at 02:00 UTC. Duplication checks run on PRs and main pushes.
 
 [autofix.ci](https://autofix.ci/setup) receives changed file contents and commits fixes to PRs when its GitHub App is enabled. The workflow excludes `.github` paths from automatic fixes.

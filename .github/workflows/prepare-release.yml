@@ -1,0 +1,79 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version without a leading v or build metadata, such as 0.2.0 or 0.2.0-alpha.0"
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.repository == 'jong-kyung/vp-config'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      VERSION: ${{ inputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      # Release branches must start from main, regardless of the dispatch ref.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+      - name: Validate version
+        run: bash .github/scripts/release-version.sh "$VERSION" "$(node -p "require('./package.json').version")"
+      - name: Prepare release branch
+        run: |
+          set -euo pipefail
+          branch="release/v$VERSION"
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+          pkg.version = process.env.VERSION;
+          writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          NODE
+
+          remote="$(git ls-remote --heads origin "$branch")"
+          if [ -n "$remote" ]; then
+            git fetch origin "$branch:refs/remotes/origin/$branch"
+            # Reuse only an identical version-only change; never rewrite a branch.
+            git diff --exit-code "origin/$branch" -- package.json
+            git diff --exit-code "main...origin/$branch" -- . ':!package.json'
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git switch -c "$branch"
+            git add package.json
+            git commit -m "release: v$VERSION"
+            git push origin "$branch"
+          fi
+      - name: Open release PR
+        run: |
+          set -euo pipefail
+          branch="release/v$VERSION"
+          existing="$(gh pr list --head "$branch" --base main --state open --json number --jq '.[0].number')"
+          if [ -n "$existing" ]; then
+            echo "Release PR #$existing already exists."
+            exit 0
+          fi
+          gh pr create --draft --base main --head "$branch" \
+            --title "release: v$VERSION" \
+            --body "Bumps the package version to $VERSION.
+
+          Mark this PR ready for review and merge it to start the release workflow. Publication requires checks, tests, a verified package tarball, and approval in the release environment.
+
+          GITHUB_TOKEN does not trigger pull request CI. The release workflow runs CI on the merge commit before publication. If branch protection requires PR checks, a maintainer must close and reopen this PR to trigger them."
